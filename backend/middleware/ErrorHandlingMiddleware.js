@@ -9,5 +9,7 @@ export default (err, req, res, next) => {
         return res.status(500).json({message: "UNEXPECRED_ERROR_DATABASE"});
     }
 
+    console.log(err);
+
     res.status(500).json({err: "UNEXPECTED_ERROR"})
 };

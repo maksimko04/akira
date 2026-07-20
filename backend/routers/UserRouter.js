@@ -5,6 +5,7 @@ import { finalValidator as validator } from "../validation/Validator.js"
 import checkRoleMiddleware from "../middleware/checkRoleMiddleware.js";
 import Roles from "../models/Roles.js";
 import { param } from "express-validator";
+import responseService from "../services/ResponseService.js";
 
 const router = new Router();
 
@@ -17,7 +18,7 @@ router.post("/login",
     catchAsync(async (req, res) => {
         const { email, password } = req.body;
         const { user, jwtToken } = await userService.login(email, password);
-        res.json({ user, jwtToken });
+        responseService.success(res, { user, jwtToken });
     }));
 
 router.post("/registration",
@@ -28,12 +29,12 @@ router.post("/registration",
     validator,
     catchAsync(async (req, res) => {
         const { user, jwtToken } = await userService.createUser(req.body);
-        res.json({ user, jwtToken });
+        responseService.success(res, { user, jwtToken });
     }));
 
 router.get("/me", checkRoleMiddleware(Roles.USER, Roles.ADMIN), catchAsync(async (req, res) => {
     const user = await userService.getUser(req.user.id);
-    res.json({ user });
+    responseService.success(res, { user });
 }));
 
 router.get("/:id",
@@ -41,14 +42,14 @@ router.get("/:id",
     validator,
     catchAsync(async (req, res) => {
         const user = await userService.getUser(req.params.id);
-        res.json({ user });
+        responseService.success(res, { user });
     }));
 
 router.delete("/me",
     checkRoleMiddleware(Roles.USER, Roles.ADMIN),
     catchAsync(async (req, res) => {
         await userService.deleteUser(req.user.id);
-        res.json({ ok: true });
+        responseService.success(res, {});
     }))
 
 router.delete("/:id",
@@ -57,7 +58,7 @@ router.delete("/:id",
     validator,
     catchAsync(async (req, res) => {
         await userService.deleteUser(req.params.id);
-        res.json({ ok: true });
+        responseService.success(res, {});
     }));
 
 
@@ -71,7 +72,7 @@ router.put("/me",
     catchAsync(async (req, res) => {
         const { oldPassword, ...updatedInfo } = req.body;
         const user = await userService.updateOwnUser(req.user.id, oldPassword, updatedInfo);
-        res.json({ user });
+        responseService.success(res, { user });
     })
 )
 
@@ -83,7 +84,7 @@ router.put("/:id",
     validator,
     catchAsync(async (req, res) => {
         const user = await userService.updateUserByAdmin(req.params.id, req.body);
-        res.json({ user });
+        responseService.success(res, { user });
     }))
 
 export default router;

@@ -15,6 +15,14 @@ const Message = new mongoose.Schema({
         type: [String],
         default: []
     }
-}, {timestamps: true});
+}, {
+    toJSON: {
+        transform: (doc, ret) => {
+            delete ret.__v;
+            return ret;
+        }
+    },
+    timestamps: true
+});
 
 export default mongoose.model("Message", Message);
