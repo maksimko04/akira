@@ -101,7 +101,7 @@ class UserService {
 
         for(const key in updatedInfo) {
             if(user[key] === undefined){
-                throw ApiError.badRequest("INCORRECT_FIELD");
+                throw ApiError.badRequest("INVALID_REQUEST_DATA");
             }
 
             if(PROTECTED_IDENTITY_FIELDS.includes(key)){

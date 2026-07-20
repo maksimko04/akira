@@ -13,7 +13,10 @@ const Message = new mongoose.Schema({
     replied: mongoose.Schema.Types.ObjectId,
     attachments: {
         type: [String],
-        default: []
+    },
+    chat: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true
     }
 }, {
     toJSON: {
