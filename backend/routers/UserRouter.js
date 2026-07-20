@@ -31,6 +31,11 @@ router.post("/registration",
         res.json({ user, jwtToken });
     }));
 
+router.get("/me", checkRoleMiddleware(Roles.USER, Roles.ADMIN), catchAsync(async (req, res) => {
+    const user = await userService.getUser(req.user.id);
+    res.json({ user });
+}));
+
 router.get("/:id",
     param("id").isMongoId().withMessage("INVALID_ID"),
     validator,

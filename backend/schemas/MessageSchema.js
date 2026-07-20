@@ -16,3 +16,5 @@ const Message = new mongoose.Schema({
         default: []
     }
 }, {timestamps: true});
+
+export default mongoose.model("Message", Message);
