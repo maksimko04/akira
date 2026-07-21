@@ -4,6 +4,10 @@ import ApiError from "../models/ApiError.js";
 import MemberRoles from "../models/MemberRoles.js";
 import MemberRights from "../models/MemberRights.js";
 import chatInfo from "../models/ChatInfo.js";
+import ChatTypes from "../models/ChatTypes.js";
+
+//ARRAY CHAT INFO
+const chatInfoArray = Object.keys(chatInfo)
 
 //STRENGTH OF ROLES
 const memberRolesArray = [MemberRoles.MEMBER, MemberRoles.ADMIN, MemberRoles.OWNER];
@@ -51,6 +55,14 @@ class ChatService {
         return member;
     }
 
+    async checkMemberInChat(userId, chatId){
+        const chat = this.getChat(chatId);
+
+        const member = this.findMember(chat, userId);
+
+        return member === true;
+    }
+
     changeMemberRight(member, right, active) {
         if (active) {
             if (!member.rights.includes(right)) {
@@ -62,7 +74,23 @@ class ChatService {
         }
     }
 
-    async createChat(chatConfiguration) {
+    async getChat(chatId){
+        return await Chat.findById(chatId);
+    }
+
+    async getUserChats(userId, pagination){
+        const limit = pagination.limit || 20;
+        const skip = pagination.skip || 0;
+
+        const chats = await Chat.find({"members.user": userId})
+        .sort( {_id: -1 })
+        .limit(limit)
+        .skip(skip);
+
+        return chats;
+    }
+
+    async create(chatConfiguration) {
         if (chatConfiguration.type === chatTypes.PRIVATE) {
             const user1 = chatConfiguration.members[0].user;
             const user2 = chatConfiguration.members[1].user;
@@ -78,11 +106,18 @@ class ChatService {
                 throw ApiError.badRequest("CHAT_ALREADY_EXISTS");
             }
         }
+        else{
+            for(const field of chatInfoArray){
+                if(!chatConfiguration[field]){
+                    throw ApiError.badRequest();
+                }
+            }
+        }
         return await Chat.create(chatConfiguration);
     }
 
-    async deleteChat(actorId, chatId) {
-        const chat = await Chat.findById(chatId);
+    async delete(actorId, chatId) {
+        const chat = getChat(chatId);
         if (!chat) {
             throw ApiError.badRequest("CHAT_NOT_EXISTS");
         }
@@ -101,10 +136,14 @@ class ChatService {
         await Chat.findByIdAndDelete(chatId);
     }
 
-    async changeInfoGroup(actorId, chatId, info) {
-        const chat = await Chat.findById(chatId);
+    async editInfoGroup(actorId, chatId, info) {
+        const chat = getChat(chatId);
         if (!chat) {
             throw ApiError.badRequest("CHAT_NOT_EXISTS");
+        }
+
+        if(chat.type === ChatTypes.PRIVATE){
+            throw ApiError.badRequest();
         }
 
         const member = this.findMember(chat, actorId);
@@ -126,10 +165,12 @@ class ChatService {
         }
 
         await chat.save();
+
+        return chat;
     }
 
-    async addMembers(actorId, chatId, ...members) {
-        const chat = await Chat.findById(chatId);
+    async addMembers(actorId, chatId, ...membersId) {
+        const chat = getChat(chatId);
         if (!chat) {
             throw ApiError.badRequest("CHAT_NOT_EXISTS");
         }
@@ -144,18 +185,24 @@ class ChatService {
             throw ApiError.forbidden();
         }
 
-        for (const newMember of members) {
-            if (this.findMember(chat, newMember.user)) {
+        for (const newMemberId of membersId) {
+            if (this.findMember(chat, newMemberId)) {
                 throw ApiError.badRequest("MEMBER_ALREADY_EXISTS");
             }
-            chat.members.push(newMember);
+            chat.members.push({
+                user: newMemberId,
+                role: MemberRoles.MEMBER,
+                right: Object.keys(MemberRights.MEMBER)
+            });
         }
 
         await chat.save();
+
+        return chat.members;
     }
 
-    async changeRights(actorId, chatId, memberId, role, rights) {
-        const chat = await Chat.findById(chatId);
+    async editRights(actorId, chatId, memberId, role, rights) {
+        const chat = getChat(chatId);
         if (!chat) {
             throw ApiError.badRequest("CHAT_NOT_EXISTS");
         }
@@ -200,6 +247,33 @@ class ChatService {
             }
         }
 
+        await chat.save();
+
+        return member;
+    }
+
+    async removeMember(actorId, chatId, memberId){
+        const chat = getChat(chatId);
+        if (!chat) {
+            throw ApiError.badRequest("CHAT_NOT_EXISTS");
+        }
+
+        const actor = this.findMember(chat, actorId);
+        const member = this.findMember(chat, memberId);
+
+        if (!actor) {
+            throw ApiError.forbidden();
+        }
+        
+        if(!member){
+            throw ApiError.forbidden();
+        }
+
+        if (strengthOfRole[actor.role] <= strengthOfRole[member.role]) {
+            throw ApiError.forbidden();
+        }
+
+        chat.members = chat.members.filter(member => member.id != memberId);
         await chat.save();
     }
 }

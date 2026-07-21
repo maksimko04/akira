@@ -2,6 +2,7 @@ export default Object.freeze({
     MEMBER: {
         EDIT_OWN_MESSAGES: "EDIT_OWN_MESSAGES",
         DELETE_OWN_MESSAGES: "DELETE_OWN_MESSAGES",
+        SEND_MESSAGES: "SEND_MESSAGES",
         SEND_PHOTOS: "SEND_PHOTOS",
         SEND_FILES: "SEND_FILES",
         CHANGE_GROUP_INFO: "CHANGE_GROUP_INFO",
@@ -9,7 +10,6 @@ export default Object.freeze({
     },
     ADMIN: {
         DELETE_MESSAGES: "DELETE_MESSAGES",
-        DELETE_MEMBERS: "DELETE_MEMBERS",
         PROMOTE_TO_ADMIN: "PROMOTE_TO_ADMIN",
     },
     OWNER: {}

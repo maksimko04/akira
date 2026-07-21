@@ -39,4 +39,4 @@ const ChatSchema = new mongoose.Schema({...{
     }
 });
 
-export default mongoose.Model("Chat", ChatSchema);
+export default mongoose.model("Chat", ChatSchema);
