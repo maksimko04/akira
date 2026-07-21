@@ -1,14 +1,24 @@
 import Message from "../schemas/MessageSchema.js";
 import ApiError from "../models/ApiError.js";
 import ChatService from "./ChatService.js";
+import MemberRights from "../models/MemberRights.js";
 
 class MessagesService {
     async createMessage(messageInfo){
-        const {chatId, replied, authorId} = messageInfo;
-        const chat = ChatService.getChat(chatId);
+        const {chatId, text, replied, authorId, attachments} = messageInfo;
+        const chat = await ChatService.getChat(chatId);
 
         if(!chat){
             throw ApiError.badRequest("CHAT_NOT_EXISTS");
+        }
+
+        const member = await ChatService.findMember(chat, authorId);
+        if(!member){
+            throw ApiError.forbidden();
+        }   
+
+        if(!ChatService.checkRight(member, MemberRights.MEMBER.SEND_MESSAGES)){
+            throw ApiError.forbidden();
         }
 
         if(replied){
@@ -18,7 +28,13 @@ class MessagesService {
             }
         }
 
-        return await Message.create({author, text, attachments, replied});
+        return await Message.create({
+            chat: chatId,
+            author: authorId,
+            text: text,
+            replied: replied,
+            attachments: attachments,
+        });
     }
 
     async getMessages(userId, filter, pagination){
@@ -35,7 +51,7 @@ class MessagesService {
         const limit = pagination.limit || 20;
         const skip = pagination.skip || 0;
 
-        const query = {chatId};
+        const query = {chat: chatId};
 
         if(pattern){
             query.text = {$regex: pattern, $options: "i"};
@@ -48,6 +64,7 @@ class MessagesService {
             query.author = memberId;
         }
 
+        console.log(query);
         const messages = await Message.find(query)
             .sort({ _id: -1})
             .limit(limit)

@@ -27,7 +27,8 @@ const ChatSchema = new mongoose.Schema({...{
                 type: [String],
                 enum: rights
             }
-        }]
+        }],
+        _id: false
     },
     //GROUP && CHANELS
 }, ...ChatInfo}, {

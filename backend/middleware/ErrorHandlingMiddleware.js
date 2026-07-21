@@ -2,7 +2,7 @@ import ApiError from "../models/ApiError.js";
 
 export default (err, req, res, next) => {
     if(err instanceof ApiError){
-        return res.status(err.status).json({err: err.message});
+        return res.status(err.status).json({status: "error", err: err.message});
     }
 
     if(err.name === "ValidationError"){

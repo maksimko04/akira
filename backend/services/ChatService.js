@@ -5,6 +5,7 @@ import MemberRoles from "../models/MemberRoles.js";
 import MemberRights from "../models/MemberRights.js";
 import chatInfo from "../models/ChatInfo.js";
 import ChatTypes from "../models/ChatTypes.js";
+import UserService from "./UserService.js";
 
 //ARRAY CHAT INFO
 const chatInfoArray = Object.keys(chatInfo)
@@ -35,7 +36,7 @@ class ChatService {
             return true;
         }
 
-        if(necessaryRole > strengthOfRole[member.role]){
+        if (necessaryRole > strengthOfRole[member.role]) {
             return false;
         }
 
@@ -52,15 +53,16 @@ class ChatService {
             }
         }
 
+
         return member;
     }
 
-    async checkMemberInChat(userId, chatId){
-        const chat = this.getChat(chatId);
+    async checkMemberInChat(userId, chatId) {
+        const chat = await this.getChat(chatId);
 
         const member = this.findMember(chat, userId);
 
-        return member === true;
+        return member !== undefined;
     }
 
     changeMemberRight(member, right, active) {
@@ -74,46 +76,127 @@ class ChatService {
         }
     }
 
-    async getChat(chatId){
+    async getChat(chatId) {
         return await Chat.findById(chatId);
     }
 
-    async getUserChats(userId, pagination){
+    async getUserChats(userId, pagination) {
         const limit = pagination.limit || 20;
         const skip = pagination.skip || 0;
 
-        const chats = await Chat.find({"members.user": userId})
-        .sort( {_id: -1 })
-        .limit(limit)
-        .skip(skip);
+        const chats = await Chat.find({ "members.user": userId })
+            .sort({ _id: -1 })
+            .limit(limit)
+            .skip(skip);
 
         return chats;
     }
 
-    async create(chatConfiguration) {
-        if (chatConfiguration.type === chatTypes.PRIVATE) {
-            const user1 = chatConfiguration.members[0].user;
-            const user2 = chatConfiguration.members[1].user;
-            const chat = await Chat.findOne({
-                type: chatTypes.PRIVATE, members: {
-                    $all: [
-                        { $elemMatch: { user: user1 } },
-                        { $elemMatch: { user: user2 } }
-                    ]
-                }
-            });
-            if (chat) {
-                throw ApiError.badRequest("CHAT_ALREADY_EXISTS");
-            }
+    async createPrivateChat(userId, chatConfiguration) {
+        const otherUserId = chatConfiguration.members[0];
+        if (!await UserService.getUser(otherUserId)) {
+            throw ApiError.badRequest("USER_NOT_EXISTS");
         }
-        else{
-            for(const field of chatInfoArray){
-                if(!chatConfiguration[field]){
-                    throw ApiError.badRequest();
-                }
+        const chat = await Chat.findOne({
+            type: chatTypes.PRIVATE, members: {
+                $all: [
+                    { $elemMatch: { user: user1 } },
+                    { $elemMatch: { user: user2 } }
+                ]
             }
+        });
+        if (chat) {
+            throw ApiError.badRequest("CHAT_ALREADY_EXISTS");
         }
+        const membersInDatabase = [
+            {
+                user: userId,
+                role: MemberRoles.OWNER,
+                rights: []
+            },
+            {
+                user: otherUserId,
+                role: MemberRoles.OWNER,
+                rights: []
+            }
+        ];
+
+        chatConfiguration.members = membersInDatabase;
+
         return await Chat.create(chatConfiguration);
+    }
+
+    async createGroup(userId, chatConfiguration) {
+        for (const field of chatInfoArray) {
+            if (!chatConfiguration[field]) {
+                throw ApiError.badRequest(`${field.toUpperCase()}_IS_REQUIRED`);
+            }
+        }
+
+        const membersInDatabase = [{
+            user: userId,
+            role: MemberRoles.OWNER,
+            rights: []
+        }];
+
+        for (const memberId of chatConfiguration.members) {
+            if (!await UserService.getUser(memberId)) {
+                throw ApiError.badRequest("USER_NOT_EXISTS");
+            }
+
+            membersInDatabase.push({
+                user: memberId,
+                role: MemberRoles.MEMBER,
+                rights: Object.keys(MemberRights.MEMBER)
+            });
+        }
+
+        chatConfiguration.members = membersInDatabase;
+
+        return await Chat.create(chatConfiguration);
+    }
+
+    async createChannel(userId, chatConfiguration) {
+        for (const field of chatInfoArray) {
+            if (!chatConfiguration[field]) {
+                throw ApiError.badRequest(`${field.toUpperCase()}_IS_REQUIRED`);
+            }
+        }
+
+        const membersInDatabase = [{
+            user: userId,
+            role: MemberRoles.OWNER,
+            rights: []
+        }];
+
+        for (const memberId of chatConfiguration.members) {
+            if (!await UserService.getUser(memberId)) {
+                throw ApiError.badRequest("USER_NOT_EXISTS");
+            }
+
+            membersInDatabase.push({
+                user: memberId,
+                role: MemberRoles.MEMBER,
+                rights: []
+            });
+        }
+
+        chatConfiguration.members = membersInDatabase;
+
+        return await Chat.create(chatConfiguration);
+    }
+
+    async create(userId, chatConfiguration) {
+        switch (chatConfiguration.type) {
+            case chatTypes.PRIVATE:
+                return this.createPrivateChat(userId, chatConfiguration);
+            case chatTypes.GROUP:
+                return this.createGroup(userId, chatConfiguration);
+            case chatTypes.CHANEL:
+                return this.createChannel(userId, chatConfiguration);
+            default:
+                throw ApiError.badRequest();
+        }
     }
 
     async delete(actorId, chatId) {
@@ -142,7 +225,7 @@ class ChatService {
             throw ApiError.badRequest("CHAT_NOT_EXISTS");
         }
 
-        if(chat.type === ChatTypes.PRIVATE){
+        if (chat.type === ChatTypes.PRIVATE) {
             throw ApiError.badRequest();
         }
 
@@ -189,6 +272,11 @@ class ChatService {
             if (this.findMember(chat, newMemberId)) {
                 throw ApiError.badRequest("MEMBER_ALREADY_EXISTS");
             }
+
+            if(!await UserService.getUser(newMemberId)){
+                throw ApiError.badRequest("USER_NOT_EXISTS");
+            }
+
             chat.members.push({
                 user: newMemberId,
                 role: MemberRoles.MEMBER,
@@ -252,7 +340,7 @@ class ChatService {
         return member;
     }
 
-    async removeMember(actorId, chatId, memberId){
+    async removeMember(actorId, chatId, memberId) {
         const chat = getChat(chatId);
         if (!chat) {
             throw ApiError.badRequest("CHAT_NOT_EXISTS");
@@ -264,8 +352,8 @@ class ChatService {
         if (!actor) {
             throw ApiError.forbidden();
         }
-        
-        if(!member){
+
+        if (!member) {
             throw ApiError.forbidden();
         }
 

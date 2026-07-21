@@ -14,24 +14,6 @@ const router = new Router();
 
 const catchAsync = (fn) => (req, res, next) => fn(req, res, next).catch(next);
 
-// router.post("/create", 
-//     checkRoleMiddleware(Roles.USER, Roles.ADMIN), 
-//     textValidator(),
-//     repliedValidator(true),
-//     validator,
-//     catchAsync(async (req, res, next) => {
-//     const { text, attacments, replied } = req.body;
-//     const message = await MessagesService.createMessage(req.user.id, text, attacments, replied);
-//     responseService.success(res, { message });
-// }));
-
-// router.get("/", catchAsync(async (req, res, next) => {
-//     const limit = parseInt(req.query.limit);
-//     const skip = parseInt(req.query.skip);
-//     const messages = await MessagesService.getMessages(limit, skip);
-//     responseService.success(res, { messages });
-// }));
-
 router.get("/", CheckAuthorization,
     paginationValidator(),
     validator,
@@ -49,7 +31,7 @@ router.post("/create", CheckAuthorization,
     chatTypeValidator(),
     validator,
     catchAsync(async (req, res, next) => {
-        const chat = await ChatService.create(req.body);
+        const chat = await ChatService.create(req.user.id, req.body);
 
         responseService.success(res, { chat });
     })

@@ -17,7 +17,19 @@ export const paginationValidator = (isOptional = true) => [
 ];
 
 export const idPathValidator = () => param("id").isMongoId().withMessage("INVALID_ID");
-export const idBodyValidator = (nameField) => param(nameField).isMongoId().withMessage("INVALID_ID");
+
+export const idBodyValidator = (nameField, isOptional = false) => createValidator(
+    body(nameField),
+    isOptional,
+    (chain) => chain
+        .isMongoId().withMessage(`INVALID_${nameField.toUpperCase()}`)
+);
+export const idQueryValidator = (nameField, isOptional = false) => createValidator(
+    query(nameField),
+    isOptional,
+    (chain) => chain
+        .isMongoId().withMessage(`INVALID_${nameField.toUpperCase()}`)
+);
 
 export const arrayOfIdValidator = (arrName, isOptional = false) => createValidator(
     body(`${arrName}.*`),

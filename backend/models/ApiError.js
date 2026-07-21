@@ -5,11 +5,11 @@ export default class ApiError extends Error {
         this.message = message;
     }
 
-    static badRequest(message){
+    static badRequest(message = "BAD_REQUEST"){
         return new ApiError(400, message);
     }
 
-    static internal(message){
+    static internal(message = "INTERNAL"){
         return new ApiError(500, message);
     }
 

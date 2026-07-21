@@ -21,24 +21,46 @@ export const titleValidator = (isOptional = false) => createValidator(
 
 const rights = Object.values(MemberRights).flat();
 
+// FULL MEMBERS IN DATABASE
+// export const membersValidator = (isOptional = false) => [
+//     createValidator(
+//         body("members"),
+//         isOptional,
+//         (chain) => chain
+//             .isArray({ min: 1 }).withMessage("NO_MEMBERS")
+//     ),
+//     createValidator(
+//         body("members.*.user"),
+//         isOptional,
+//         (chain) => chain
+//             .isMongoId().withMessage("INVALID_ID")
+//     ),
+//     createValidator(
+//         body("members.*.role"),
+//         isOptional,
+//         (chain) => chain
+//             .isIn(Object.keys(MemberRoles)).withMessage("INVALID_TYPE")
+//     ),
+//     createValidator(
+//         body("members.*.rights.*"),
+//         isOptional,
+//         (chain) => chain
+//             .isIn(rights).withMessage("INVALID_TYPE")
+//     ),
+// ];
+
 export const membersValidator = (isOptional = false) => [
     createValidator(
-        body("members.*.user"),
+        body("members"),
+        isOptional,
+        (chain) => chain
+            .isArray().withMessage("NO_MEMBERS")
+    ),
+    createValidator(
+        body("members.*"),
         isOptional,
         (chain) => chain
             .isMongoId().withMessage("INVALID_ID")
-    ),
-    createValidator(
-        body("members.*.role"),
-        isOptional,
-        (chain) => chain
-            .isIn(Object.keys(MemberRoles)).withMessage("INVALID_TYPE")
-    ),
-    createValidator(
-        body("members.*.rights.*"),
-        isOptional,
-        (chain) => chain
-            .isIn(rights).withMessage("INVALID_TYPE")
     ),
 ];
 

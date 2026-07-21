@@ -14,3 +14,10 @@ export const repliedValidator = (isOptional = false) => createValidator(
     isOptional,
     (chain) => chain.isMongoId().withMessage("INVALID_FORMAT")
 );
+
+export const patternMessageValidator = (isOptional = false) => createValidator(
+    query("pattern"),
+    isOptional,
+    (chain) => chain.isString().withMessage("INVALID_PATTERN")
+        .notEmpty().withMessage("INVALID_PATTERN")
+);
