@@ -46,4 +46,23 @@ router.get("/:id",
         ResponseService.success(res, { messages });
     }));
 
+router.put("/:id",
+    CheckAuthorization,
+    idPathValidator(),
+    textValidator(),
+    validator,
+    catchAsync(async (req, res, next) => {
+        const editMessage = await MessagesService.editMessage(req.user.id, req.params.id, req.body.text);
+        ResponseService.success(res, { message: editMessage });
+    })
+);
+
+router.delete("/:id", CheckAuthorization,
+    idPathValidator(),
+    validator,
+    catchAsync(async (req, res, next) => {
+        await MessagesService.deleteMessage(req.user.id, req.params.id);
+        ResponseService.success(res, {});
+    }));
+
 export default router;
