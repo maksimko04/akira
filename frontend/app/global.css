@@ -1,0 +1,162 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --border-color: #e3e9e9;
+  --background-color: #f3f8f8;
+  --text-color: #1a1a1a;
+  --vidget-color1: #fdfdfe;
+  --box-shadow: 0 4px 4px -4px rgba(12, 12, 13, 0.05), 0 16px 32px -4px rgba(12, 12, 13, 0.1);
+  --text-muted: #5e6c6e;
+  --primary-color: #0070f3;
+  --primary-hover: #005ecb;
+}
+
+.dark {
+  --border-color: #2b3536;
+  --background-color: #121819;
+  --text-color: #e6eded;
+  --vidget-color1: #1c2425;
+  --box-shadow: 0 4px 4px -4px rgba(0, 0, 0, 0.3), 0 16px 32px -4px rgba(0, 0, 0, 0.5);
+  --text-muted: #8e9d9f;
+  --primary-color: #3b82f6;
+  --primary-hover: #2563eb;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  color: var(--text-color);
+  background-color: var(--background-color);
+  --border-radius: 5px;
+  transition: background-color 0.3s, color 0.3s, box-shadow 0.3s;
+}
+
+h1,
+p {
+  margin: 0;
+}
+
+label {
+  display: flex;
+  align-items: center;
+}
+
+button {
+  padding: 0;
+  background-color: var(--text-color);
+  border: none;
+  border-radius: var(--border-radius);
+  color: var(--background-color);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+svg, a {
+  display: block;
+}
+
+ul {
+  display: block;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  height: 100%;
+}
+
+img {
+  height: 100%;
+  width: auto;
+}
+
+input {
+    display: block;
+}
+
+div:has(input){
+    position: relative;
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="search"] {
+  appearance: none;
+  -webkit-appearance: none;
+  border: none;
+  border-bottom: 2px #1a1a1a solid;
+  padding: 2px;
+  font-size: 20px;
+  outline: none;
+  background: transparent;
+  width: 100%;
+  color: var(--text-color);
+}
+
+div.invalid::after {
+    content: "The field is not filled in correctly.";
+    color: red;
+    font-size: 12px;
+    position: absolute;
+    left: 0;
+}
+
+input[type="search"]:placeholder-shown {
+  background-position: right 10px center;
+  background-size: 20px 20px;
+  background-repeat: no-repeat;
+}
+
+input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  margin: 0;
+  height: 80%;
+  aspect-ratio: 1 / 1;
+  border: 2px var(--border-color) solid;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  margin-right: 5px;
+  position: relative;
+
+  &:checked {
+    background-color: var(--text-color);
+
+    &::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      translate: -50% -50%;
+      width: 16px;
+      height: 16px;
+      background-color: var(--background-color);
+      -webkit-mask: url("/src/assets/icons/icon-check_white.svg") center/contain no-repeat;
+      mask: url("/src/assets/icons/icon-check_white.svg") center/contain no-repeat;
+    }
+  }
+}
+
+.primary-button {
+  background-color: var(--primary-color);
+  color: #ffffff;
+  box-shadow: var(--box-shadow);
+}
+
+.primary-button:hover {
+  background-color: var(--primary-hover);
+  transform: translateY(-2px);
+}

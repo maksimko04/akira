@@ -19,7 +19,13 @@ router.post("/login",
     catchAsync(async (req, res, next) => {
         const { email, password } = req.body;
         const { user, jwtToken } = await userService.login(email, password);
-        responseService.success(res, { user, jwtToken });
+        res.cookie('token', jwtToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 24 * 60 * 60 * 1000
+        });
+        responseService.success(res, { ...user });
     }));
 
 router.post("/registration",
@@ -30,7 +36,13 @@ router.post("/registration",
     validator,
     catchAsync(async (req, res, next) => {
         const { user, jwtToken } = await userService.createUser(req.body);
-        responseService.success(res, { user, jwtToken });
+        res.cookie('token', jwtToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'strict',
+            maxAge: 24 * 60 * 60 * 1000
+        });
+        responseService.success(res, { ...user });
     }));
 
 router.get("/me", checkRoleMiddleware(Roles.USER, Roles.ADMIN), catchAsync(async (req, res, next) => {

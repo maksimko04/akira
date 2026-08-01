@@ -1,17 +1,24 @@
 import "dotenv/config.js";
 
+import dns from 'node:dns';
+dns.setServers(['8.8.8.8', '8.8.4.4']);
+
 import express from "express";
 import mongoose from "mongoose";
 import apiRouter from "./routers/index.js"
 import errorHandler from "./middleware/ErrorHandlingMiddleware.js"
 import authMiddleware from "./middleware/AuthMiddleware.js";
 import ApiError from "./models/ApiError.js";
+import cors from "cors"
+import cookieParser from "cookie-parser";
 
 const PORT = process.env.PORT;
 const app = express();
 const DB_URL = process.env.DB_URL;
 
 app.use(express.json());
+app.use(cors());
+app.use(cookieParser());
 app.use(authMiddleware);
 app.use("/api", apiRouter); 
 

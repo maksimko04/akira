@@ -25,13 +25,13 @@ class UserService {
         }
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
-        const user = await User.create({username, name, email, password: hashedPassword});
+        const user = await User.create({username, name, email, password: hashedPassword}).lean();
         const jwtToken = jwtService.generateToken(user);
         return {user, jwtToken};
     }
 
     async login(email, password) {
-        const user = await User.findOne({email});
+        const user = await User.findOne({email}).lean();
         if(!user){
             throw ApiError.badRequest("USER_NOT_EXISTS");
         }
