@@ -1,0 +1,50 @@
+.container {
+    display: flex;
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--background-color);
+    border: var(--border-color) 1px solid;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    min-width: 200px;
+    width: max-content;
+    height: 75px;
+    padding: 5px;
+    padding-left: 15px;
+    padding-right: 15px;
+    gap: 10px;
+    animation: slideIn 2.9s ease-in;
+    opacity: 0;
+}
+
+
+.container img {
+    height: 60%;
+}
+
+@keyframes slideIn {
+    0% {
+        transform: translate(-50%, -120%);
+        opacity: 1;
+    }
+
+    11% {
+        transform: translate(-50%, 0);
+        opacity: 1;
+    }
+
+    80% {
+        transform: translate(-50%, 0);
+        opacity: 1;
+    }
+
+    100% {
+        transform: translate(-50%, 0);
+        opacity: 0;
+    }
+}

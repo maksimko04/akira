@@ -24,7 +24,7 @@ export const nameValidator = (isOptional = false) => createValidator(
     isOptional,
     (chain) => chain
         .exists().withMessage("NAME_IS_REQUIRED")
-        .isLength({ min: 3, max: 20 }).withMessage("INVALID_NAME_LENGTH")
+        .isLength({ min: 3, max: 40 }).withMessage("INVALID_NAME_LENGTH")
         .matches(/^\S(.*\S)?$/).withMessage("NAME_WITH_SPACES")
 );
 

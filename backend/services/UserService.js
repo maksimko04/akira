@@ -18,14 +18,14 @@ class UserService {
     async createUser(userInfo) {
         const {username, name, email, password} = userInfo;
         if(await User.findOne({username})){
-            throw ApiError.badRequest("USER_ALREADY_EXISTS");
+            throw ApiError.badRequest("USER_WITH_USERNAME_ALREADY_EXISTS");
         }
         if(await User.findOne({email})){
-            throw ApiError.badRequest("EMAIL_ALREADY_EXISTS");
+            throw ApiError.badRequest("USER_WITH_EMAIL_ALREADY_EXISTS");
         }
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
-        const user = await User.create({username, name, email, password: hashedPassword}).lean();
+        const user = await User.create({username, name, email, password: hashedPassword});
         const jwtToken = jwtService.generateToken(user);
         return {user, jwtToken};
     }
@@ -39,7 +39,7 @@ class UserService {
             const jwtToken = jwtService.generateToken(user);
             return {user, jwtToken};
         }
-        throw ApiError.badRequest("INVALID_PASSWORD");
+        throw ApiError.badRequest("INVALID_CREDENTIALS");
     }
 
     async deleteUser(id){
@@ -65,7 +65,7 @@ class UserService {
                 }
 
                 if(await User.findOne({[key]: updatedInfo[key]})) {
-                    throw ApiError.badRequest(`USER_EXISTS_WITH_SAME_${key.toUpperCase()}`);
+                    throw ApiError.badRequest(`USER_WITH_${key.toUpperCase()}_ALREADY_EXISTS`);
                 }
             }
 
@@ -101,7 +101,7 @@ class UserService {
 
         for(const key in updatedInfo) {
             if(user[key] === undefined){
-                throw ApiError.badRequest("INVALID_REQUEST_DATA");
+                throw ApiError.badRequest("INCORRECT_FIELD");
             }
 
             if(PROTECTED_IDENTITY_FIELDS.includes(key)){
@@ -114,7 +114,7 @@ class UserService {
                 }
 
                 if(await User.findOne({[key]: updatedInfo[key]})){
-                    throw ApiError.badRequest(`USER_EXISTS_WITH_SAME_${key.toUpperCase()}`);
+                    throw ApiError.badRequest(`USER_WITH_${key.toUpperCase()}_ALREADY_EXISTS`);
                 }
             }
 

@@ -1,5 +1,6 @@
 import { ThemeProvider } from "next-themes";
-import "./global.css"
+import {ToastProvider} from "../providers/toastProvider";
+import "@/global.css"
 
 export default function RootLayout({ children }) {
   return (
@@ -10,14 +11,17 @@ export default function RootLayout({ children }) {
     >
       <body className="min-h-full flex flex-col">
         <ThemeProvider
-          attribute="class"       
-          defaultTheme="system"    
+
+          attribute="class"
+          defaultTheme="system"
           enableSystem
           disableTransitionOnChange
         >
-          {children}
+          <ToastProvider>
+            {children}
+          </ToastProvider>
         </ThemeProvider>
       </body>
-    </html>
+    </html >
   );
 }

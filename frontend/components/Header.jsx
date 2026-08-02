@@ -1,13 +1,12 @@
 "use client"
 
 import Link from "next/link";
-
-import "./header.css"
 import { useTheme } from "next-themes";
 import Image from "next/image";
+import sunIcon from "@/assets/icons/sun.png";
+import moonIcon from "@/assets/icons/moon.png";
 
-import sunIcon from "@/app/assets/icons/sun.png";
-import moonIcon from "@/app/assets/icons/moon.png";
+import styles from "./header.module.scss"
 
 export default () => {
     const { theme, setTheme } = useTheme();
@@ -17,9 +16,9 @@ export default () => {
     }
 
     return (
-        <header className="header">
+        <header className={styles.header}>
             <ul>
-                <h1>Akira</h1>
+                <Link className={styles.link__home} href={"/"}>Akira</Link>
                 <ul>
                     <Link href={"/registration"}>sign up</Link>
                     <Link href={"/login"}>sign in</Link>
