@@ -17,7 +17,10 @@ const app = express();
 const DB_URL = process.env.DB_URL;
 
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+    origin: 'http://localhost:4000',
+    credentials: true
+}));
 app.use(cookieParser());
 app.use(authMiddleware);
 app.use("/api", apiRouter); 

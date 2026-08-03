@@ -1,0 +1,7 @@
+.container {
+    display: flex;
+    flex-direction: column-reverse;
+    padding: 20px;
+    overflow: auto;
+    flex: 1;
+}

@@ -1,20 +1,23 @@
 "use client"
 
 import Header from "@/components/Header"
-import styles from "./styles.module.scss"
-import UserApi from "@/services/UserApi";
+import UserApi from "@/api/UserApi";
 import { useRef } from "react";
 import responseStatuses from "@/constants/responseStatuses";
 import { useToast } from "@/providers/toastProvider"
 import typesToast from "@/constants/typesToast";
 import { usernameRegex, emailRegex, nameRegex, passwordRegex } from "@/constants/regexes";
 import serverResponses from "../../constants/serverResponses";
+import {useRouter} from "next/navigation" 
+
+import styles from "./styles.module.scss"
 
 export default () => {
     const emailRef = useRef(null)
     const passwordRef = useRef(null)
     const usernameRef = useRef(null);
     const nameRef = useRef(null);
+    const router = useRouter();
 
     const createToast = useToast();
 
@@ -29,6 +32,8 @@ export default () => {
         return 0;
 
     }
+
+    const setUser = useAuthStore(state => state.setUser);
 
     const onSubmit = async (event) => {
         event.preventDefault();
@@ -52,7 +57,8 @@ export default () => {
                 name: nameRef.current.value.trim()
             });
 
-            window.location.replace("/");
+            setUser(response.data.user._id);
+            router.replace("/");
         }
         catch (err) {
             const message = serverResponses[err.response.data.err] ?? "something went wrong";

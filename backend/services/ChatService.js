@@ -84,24 +84,41 @@ class ChatService {
         const limit = pagination.limit || 20;
         const skip = pagination.skip || 0;
 
-        const chats = await Chat.find({ "members.user": userId })
+        let chats = await Chat.find({ "members.user": userId })
             .sort({ _id: -1 })
             .limit(limit)
             .skip(skip);
+
+
+        chats = await Promise.all(chats.map(async chat => {
+            if(chat.type !== chatTypes.PRIVATE){
+                return chat;
+            }
+
+            let interlocutorId = chat.members[0].user.toString() !== userId ? chat.members[0].user : chat.members[1].user;
+            const user = await UserService.getUser(interlocutorId);
+            chat.title = user.username;
+            return chat
+        }));
 
         return chats;
     }
 
     async createPrivateChat(userId, chatConfiguration) {
         const otherUserId = chatConfiguration.members[0];
+
+        if(userId === otherUserId){
+            throw ApiError.badRequest();
+        }
+
         if (!await UserService.getUser(otherUserId)) {
             throw ApiError.badRequest("USER_NOT_EXISTS");
         }
         const chat = await Chat.findOne({
             type: chatTypes.PRIVATE, members: {
                 $all: [
-                    { $elemMatch: { user: user1 } },
-                    { $elemMatch: { user: user2 } }
+                    { $elemMatch: { user: userId } },
+                    { $elemMatch: { user: otherUserId } }
                 ]
             }
         });

@@ -2,18 +2,22 @@
 
 import Header from "@/components/Header"
 import styles from "./styles.module.scss"
-import UserApi from "@/services/UserApi";
+import UserApi from "@/api/UserApi";
 import { useRef } from "react";
 import { emailRegex, passwordRegex } from "@/constants/regexes";
 import responseStatuses from "@/constants/responseStatuses";
 import { useToast } from "@/providers/toastProvider"
 import typesToast from "@/constants/typesToast";
+import { useAuthStore } from "../../store/useAuthStore";
+import { useRouter } from "next/navigation";
 
 export default () => {
     const emailRef = useRef(null)
     const passwordRef = useRef(null)
 
     const createToast = useToast();
+
+    const router = useRouter();
 
     const switchFieldCorrectness = (ref, regex) => {
         if (!regex.test(ref.current.value.trim())) {
@@ -26,6 +30,8 @@ export default () => {
         return 0;
 
     }
+
+    const setUser = useAuthStore(state => state.setUser);
 
     const onSubmit = async (event) => {
         event.preventDefault();
@@ -42,12 +48,13 @@ export default () => {
         try {
             const response = await UserApi.login({
                 email: emailRef.current.value.trim(),
-                password: passwordRef.current.value.trim()});
+                password: passwordRef.current.value.trim()
+            });
 
-            window.location.replace("/");
+            setUser(response.data.user._id);
+            router.replace("/")
         }
         catch (err) {
-            console.log(err);
             createToast(typesToast.error, "Incorrect email or password");
         }
 

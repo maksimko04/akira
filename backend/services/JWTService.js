@@ -5,7 +5,7 @@ const SECRET_KEY = process.env.JWT_SECRET_KEY;
 class JWTService {
     generateToken(user){
         const payload = {
-            id: user.id,
+            id: user._id,
             role: user.role
         }
         return jwt.sign(payload, SECRET_KEY, {expiresIn: "24h"});

@@ -1,0 +1,17 @@
+.header {
+    background-color: var(--vidget-color1);
+    display: flex;
+    height: 60px;
+    align-items: center;
+    gap: 15px;
+    padding-left: 20px;
+}
+
+.title {
+    font-size: 20px;
+}
+
+.additional__info {
+    font-size: 12px;
+    color: gray;
+}

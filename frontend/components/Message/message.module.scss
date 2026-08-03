@@ -1,0 +1,36 @@
+.message{
+    background-color: var(--vidget-color1);
+    min-width: 40px;
+    max-width: 350px;
+    width: fit-content;
+    padding: 10px;
+    padding-bottom: 5px;
+    margin-top: 10px;
+    border-radius: var(--border-radius);
+    display: flex;
+    gap: 5px;
+}
+
+.message:first-child {
+    margin-bottom: 70px;
+}
+
+.my__message {
+    margin-left: auto;
+}
+
+.other__message {
+
+}
+
+.text {
+    margin-bottom: 5px;
+}
+
+.time__created {
+    font-size: 12px;
+    margin-top: auto;
+    display: block;
+    width: min-content;
+    color: gray;
+}

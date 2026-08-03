@@ -1,0 +1,46 @@
+.container {
+    width: calc(100vw - 400px);
+    height: 100vh;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.sending__area {
+    display: flex;
+    bottom: 25px;
+    height: 40px;
+    position: absolute;
+    width: 80%;
+    left: 50%;
+    transform: translateX(-50%);
+    justify-content: center;
+    gap: 10px;
+}
+
+.sending__area input {
+    border-radius: var(--border-radius);
+    width: 90%;
+    outline: none;
+    border: none;
+}
+
+.container:has(.no__chat__info) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+} 
+
+.no__chat__info {
+    border-radius: var(--border-radius);
+    background-color: color-mix(in srgb, var(--vidget-color1) 70%, transparent);
+    color: var(--text-color);
+    width: max-content;
+    padding: 5px;
+}
+
+.button__send {
+    background-color: var(--vidget-color1);
+    border-radius: 100%;
+    aspect-ratio: 1 / 1;
+}

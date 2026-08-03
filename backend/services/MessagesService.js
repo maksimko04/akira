@@ -68,7 +68,6 @@ class MessagesService {
             query.author = memberId;
         }
 
-        console.log(query);
         const messages = await Message.find(query)
             .sort({ _id: -1 })
             .limit(limit)

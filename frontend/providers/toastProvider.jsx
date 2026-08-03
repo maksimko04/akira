@@ -17,7 +17,7 @@ export function ToastProvider({ children }) {
         }, duration);
     } 
     
-    return (<ToastContext.Provider value = {createToast}>
+    return (<ToastContext.Provider value = {{createToast}}>
         {children}
 
         {toasts.map(toast => 
@@ -33,5 +33,5 @@ export function useToast(){
         return;
     }
 
-    return context;
+    return context.createToast;
 }

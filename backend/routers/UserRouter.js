@@ -22,10 +22,10 @@ router.post("/login",
         res.cookie('token', jwtToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
+            sameSite: 'lax',
             maxAge: 24 * 60 * 60 * 1000
         });
-        responseService.success(res, { ...user });
+        responseService.success(res, { user });
     }));
 
 router.post("/registration",
@@ -39,10 +39,10 @@ router.post("/registration",
         res.cookie('token', jwtToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
+            sameSite: 'lax',
             maxAge: 24 * 60 * 60 * 1000
         });
-        responseService.success(res, { ...user });
+        responseService.success(res, { user });
     }));
 
 router.get("/me", checkRoleMiddleware(Roles.USER, Roles.ADMIN), catchAsync(async (req, res, next) => {

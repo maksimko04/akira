@@ -1,0 +1,25 @@
+.container {
+    width: 400px;
+    height: 100vh;
+    overflow: auto;
+    background-color: var(--vidget-color1);
+    border-right: var(--border-color) 1px solid;
+}
+
+.chat {
+    height: 75px;
+    display: flex;
+    padding: 5px;
+    padding-left: 15px;
+    align-items: center;
+    justify-content: left;
+    gap: 13px;
+    color: var(--text-color);
+    width: 100%;
+    transition: background-color 0.1s ease-in;
+    border-radius: 0;
+}
+
+.selected__chat {
+    background-color: var(--primary-color);
+}
