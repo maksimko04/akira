@@ -5,10 +5,13 @@
   --background-color: #f3f8f8;
   --text-color: #1a1a1a;
   --vidget-color1: #fdfdfe;
+  --vidget-color2: #ffffff;
+  --vidget-color3: #f4f6f6;
   --box-shadow: 0 4px 4px -4px rgba(12, 12, 13, 0.05), 0 16px 32px -4px rgba(12, 12, 13, 0.1);
   --text-muted: #5e6c6e;
   --primary-color: #0070f3;
   --primary-hover: #005ecb;
+  --author-color: #0066cc;
 }
 
 .dark {
@@ -16,10 +19,13 @@
   --background-color: #121819;
   --text-color: #e6eded;
   --vidget-color1: #1c2425;
+  --vidget-color2: #141b1c;
+  --vidget-color3: #263032;
   --box-shadow: 0 4px 4px -4px rgba(0, 0, 0, 0.3), 0 16px 32px -4px rgba(0, 0, 0, 0.5);
   --text-muted: #8e9d9f;
   --primary-color: #3b82f6;
   --primary-hover: #2563eb;
+  --author-color: #60a5fa;
 }
 
 * {
@@ -173,4 +179,17 @@ input[type="checkbox"] {
 .primary-button:hover {
   background-color: var(--primary-hover);
   transform: translateY(-2px);
+}
+
+.focus__on {
+  animation: animation__focus_on 1.5s ease-in-out;
+}
+
+@keyframes animation__focus_on {
+  0%, 100% {
+    background-color: var(--own-color);
+  }
+  50% {
+    background-color: color-mix(in srgb, var(--own-color) 40%, rgb(38, 115, 216));
+  }
 }

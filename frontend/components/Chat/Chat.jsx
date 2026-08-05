@@ -8,12 +8,12 @@ import useMe from "@/hooks/useMe";
 import { useChat } from "../../providers/ChatContext";
 import MessagesBlock from "../Message/MessagesBlock";
 import ChatHeader from "./ChatHeader";
-import { useRef } from "react";
+import { useState } from "react";
+import ContextMenuMessage from "../Message/ContextMenuMessage";
 
 export default (props) => {
     const [user, isLoading] = useMe();
-    const { selectedChat, sendMessage } = useChat();
-    const textMessageRef = useRef(null);
+    const { selectedChat, sendMessage, targetMessage, textMessageRef } = useChat();
 
     if (isLoading) {
         return null;
@@ -32,8 +32,15 @@ export default (props) => {
                     <ChatHeader />
                     <MessagesBlock />
                     <form onSubmit={onSubmit} className={styles.sending__area}>
-                        <input ref={textMessageRef}/>
-                        <button className = {styles.button__send}>
+                        <div className={styles.writing__area}>
+                            {targetMessage &&
+                                <div className={styles.action__description}>
+                                    <p className={styles.action__title}>{targetMessage.description}</p>
+                                    <p className={styles.action__message__text}>{targetMessage.text}</p>
+                                </div>}
+                            <input ref={textMessageRef} />
+                        </div>
+                        <button className={styles.button__send}>
                             <Image src={sendIcon} alt="sent" />
                         </button>
                     </form>

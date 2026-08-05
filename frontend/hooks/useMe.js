@@ -16,6 +16,7 @@ export default () => {
                     const response = await UserApi.me();
                     setUser(response.data.user._id);
                 }
+                catch(err){}
                 finally{
                     setLoading(false);
                 }

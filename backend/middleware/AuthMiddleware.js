@@ -2,6 +2,10 @@ import JWTService from "../services/JWTService.js";
 import ApiError from "../models/ApiError.js";
 
 export default (req, res, next) => {
+    if(req.method === "OPTIONS"){
+        return next();
+    }
+
     const token = req.cookies.token;
 
     if(token){

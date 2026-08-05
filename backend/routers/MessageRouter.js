@@ -11,17 +11,17 @@ import ResponseService from "../services/ResponseService.js";
 const router = new Router();
 
 const catchAsync = (fn) => (req, res, next) => fn(req, res, next).catch(next);
-router.post("/create",
-    CheckAuthorization,
-    idBodyValidator("chatId"),
-    textValidator(),
-    repliedValidator(true),
-    //ToDo... validate attachments
-    validator,
-    catchAsync(async (req, res, next) => {
-        const message = await MessagesService.createMessage({ ...req.body, authorId: req.user.id });
-        ResponseService.success(res, { message });
-    }));
+// router.post("/create",
+//     CheckAuthorization,
+//     idBodyValidator("chatId"),
+//     textValidator(),
+//     repliedValidator(true),
+//     //ToDo... validate attachments
+//     validator,
+//     catchAsync(async (req, res, next) => {
+//         const message = await MessagesService.createMessage({ ...req.body, authorId: req.user.id });
+//         ResponseService.success(res, { message });
+//     }));
 
 router.get("/:id",
     CheckAuthorization,

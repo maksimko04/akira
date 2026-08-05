@@ -17,6 +17,11 @@ const Message = new mongoose.Schema({
     chat: {
         type: mongoose.Schema.Types.ObjectId,
         required: true
+    },
+    edited: {
+        type: Boolean,
+        requied: true,
+        default: false
     }
 }, {
     toJSON: {

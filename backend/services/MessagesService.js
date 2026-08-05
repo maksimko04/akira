@@ -22,7 +22,7 @@ class MessagesService {
         }
 
         if (replied) {
-            const originalMessage = !await Message.findById(replied);
+            const originalMessage = await Message.findById(replied);
             if (!originalMessage || originalMessage.chat.toString() !== chatId.toString()) {
                 throw ApiError.badRequest("MESSAGE_NOT_EXISTS");
             }
@@ -38,7 +38,7 @@ class MessagesService {
     }
 
     async getMessage(messageId) {
-        return await Message.findById(messageId);
+        return await Message.findById(messageId).populate("author", "name");
     }
 
     async getMessages(userId, filter, pagination) {
@@ -71,7 +71,8 @@ class MessagesService {
         const messages = await Message.find(query)
             .sort({ _id: -1 })
             .limit(limit)
-            .skip(skip);
+            .skip(skip)
+            .populate("author", "name");
 
         return messages;
     }
@@ -124,18 +125,19 @@ class MessagesService {
             throw ApiError.internal();
         }
 
-        const member = await ChatService.findMember(userId);
+        const member = await ChatService.findMember(chat, userId);
 
         if (!member) {
             throw ApiError.forbidden();
         }
 
-        if (message.author.toString() === userId.toString()) {
-            if (!ChatService.checkRight(MemberRights.MEMBER.EDIT_OWN_MESSAGES)) {
+        if (message.author._id.toString() === userId.toString()) {
+            if (!ChatService.checkRight(member, MemberRights.MEMBER.EDIT_OWN_MESSAGES)) {
                 throw ApiError.forbidden();
             }
 
             message.text = text;
+            message.edited = true;
             await message.save();
             return message;
         }

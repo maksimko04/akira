@@ -21,7 +21,7 @@ router.post("/login",
         const { user, jwtToken } = await userService.login(email, password);
         res.cookie('token', jwtToken, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
+            secure: false,
             sameSite: 'lax',
             maxAge: 24 * 60 * 60 * 1000
         });
@@ -38,7 +38,7 @@ router.post("/registration",
         const { user, jwtToken } = await userService.createUser(req.body);
         res.cookie('token', jwtToken, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
+            secure: false,
             sameSite: 'lax',
             maxAge: 24 * 60 * 60 * 1000
         });

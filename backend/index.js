@@ -11,6 +11,10 @@ import authMiddleware from "./middleware/AuthMiddleware.js";
 import ApiError from "./models/ApiError.js";
 import cors from "cors"
 import cookieParser from "cookie-parser";
+import http from "http";
+import { Server as SocketServer } from "socket.io";
+import SocketChat from "./sockets/SocketChat.js";
+import SocketAuth from "./sockets/SocketAuth.js";
 
 const PORT = process.env.PORT;
 const app = express();
@@ -23,24 +27,40 @@ app.use(cors({
 }));
 app.use(cookieParser());
 app.use(authMiddleware);
-app.use("/api", apiRouter); 
+app.use("/api", apiRouter);
 
 //Not found
 app.use((req, res, next) => {
-    res.status(404).json({message: "ENDPOINT_NOT_EXISTS"});
+    res.status(404).json({ message: "ENDPOINT_NOT_EXISTS" });
 });
 app.use(errorHandler);
 
+const server = http.createServer(app);
+const io = new SocketServer(server, {
+    cors: {
+        origin: "http://localhost:4000",
+        methods: ["GET", "POST"],
+        credentials: true
+    }
+})
+app.set('io', io);
+
+io.use(SocketAuth);
+
+io.on("connection", socket => {
+    SocketChat(io, socket);
+})
+
 async function startApp() {
-    try{
+    try {
         await mongoose.connect(DB_URL);
-        app.listen(PORT, () => {
+        server.listen(PORT, () => {
             console.log("Server is running on port " + PORT);
         });
-   }
-   catch(err) {
-       console.error("Error starting app:", err);
-   }
+    }
+    catch (err) {
+        console.error("Error starting app:", err);
+    }
 }
 
 startApp();

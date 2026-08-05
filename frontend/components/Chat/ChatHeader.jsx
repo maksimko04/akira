@@ -3,7 +3,7 @@ import Image from "next/image"
 
 import styles from "./chatHeader.module.scss";
 import { useChat } from "../../providers/ChatContext";
-import typesGroup from "../../constants/typesGroup";
+import typesGroup from "../../constants/typesChat";
 import useMe from "../../hooks/useMe";
 import { useEffect, useState } from "react";
 import UserApi from "../../api/UserApi";

@@ -1,0 +1,31 @@
+.container {
+    --x: 0;
+    --y: 0;
+    height: min-content;
+    position: fixed;
+    background-color: var(--vidget-color2);
+    border-radius: var(--border-radius);
+    left: var(--x);
+    top: var(--y);
+    display: flex;
+    flex-direction: column;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    width: 150px;
+    box-shadow: var(--box-shadow);
+}
+
+.action {
+    background-color: transparent;
+    border-radius: 0;
+    color: var(--text-color);
+    width: 100%;
+    transition: background-color 0.1s ease-in;
+    height: 30px;
+    justify-content: left;
+    padding-left: 15px;
+}
+
+.action:hover{
+    background-color: var(--vidget-color3);
+}
