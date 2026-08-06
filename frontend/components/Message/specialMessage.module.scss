@@ -1,0 +1,8 @@
+.special__message {
+    border-radius: var(--border-radius);
+    background-color: color-mix(in srgb, var(--vidget-color1) 70%, transparent);
+    color: var(--text-color);
+    width: max-content;
+    padding: 5px;
+    margin: auto;
+}

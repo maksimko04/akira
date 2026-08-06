@@ -53,7 +53,6 @@ export const ChatProvider = ({ children }) => {
             default: {
                 socket.emit("send_message", { chatId: selectedChat._id, text, replied: targetMessage?.messageId }, (response) => {
                     if (response && response.success) {
-                        console.log(response.message);
                         setMessages(prev => [response.message, ...prev]);
                     }
 
@@ -81,7 +80,6 @@ export const ChatProvider = ({ children }) => {
                 const oldMessages = response.data.messages;
                 const currentMessages = messages.map(message => ({ ...message, temp: true }));
                 const combined = [...currentMessages, ...oldMessages];
-                console.log(combined)
                 const combinedMassages = Array.from(
                     new Map(combined.map(msg => [msg._id, msg])).values()
                 );

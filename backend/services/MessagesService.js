@@ -36,30 +36,27 @@ class MessagesService {
             attachments: attachments,
         });
 
-        return await message
-            .populate("author", "name")
-            .populate({
+        return await message.populate([
+            { path: "author", select: "name" },
+            {
                 path: "replied",
                 select: "text author",
-                populate: {
-                    path: "author",
-                    select: "name"
-                }
-            });
+                populate: { path: "author", select: "name" }
+            }
+        ]);
     }
 
     async getMessage(messageId) {
         return await Message
             .findById(messageId)
-            .populate("author", "name")
-            .populate({
-                path: "replied",
-                select: "text author",
-                populate: {
-                    path: "author",
-                    select: "name"
+            .populate([
+                { path: "author", select: "name" },
+                {
+                    path: "replied",
+                    select: "text author",
+                    populate: { path: "author", select: "name" }
                 }
-            });
+            ]);
     }
 
     async getMessages(userId, filter, pagination) {
@@ -89,22 +86,21 @@ class MessagesService {
         let newerMessages = [];
         let markMessageArray = [];
 
-        const queryExecute = (additionalQuery = {}, sortDirection = -1) =>
-            Message.find({
+        const queryExecute = async (additionalQuery = {}, sortDirection = -1) =>
+            await Message.find({
                 ...query,
                 ...additionalQuery
             })
                 .sort({ _id: sortDirection })
                 .limit(limit)
-                .populate("author", "name")
-                .populate({
-                    path: "replied",
-                    select: "text author",
-                    populate: {
-                        path: "author",
-                        select: "name"
+                .populate([
+                    { path: "author", select: "name" },
+                    {
+                        path: "replied",
+                        select: "text author",
+                        populate: { path: "author", select: "name" }
                     }
-                });
+                ]);
 
         if (directionPagination) {
             const offsetMessage = pagination.offset;
@@ -210,15 +206,14 @@ class MessagesService {
             message.edited = true;
             await message.save();
             return message
-                .populate("author", "name")
-                .populate({
-                    path: "replied",
-                    select: "text author",
-                    populate: {
-                        path: "author",
-                        select: "name"
+                .populate([
+                    { path: "author", select: "name" },
+                    {
+                        path: "replied",
+                        select: "text author",
+                        populate: { path: "author", select: "name" }
                     }
-                });;
+                ]);
         }
     }
 }

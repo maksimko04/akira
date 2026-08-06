@@ -1,10 +1,12 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, Fragment } from "react";
 import { useChat } from "../../providers/ChatContext";
 import Message from "./Message";
 
 import styles from "./messagesBlock.module.scss";
 import ContextMenuMessage from "./ContextMenuMessage";
 import MessageApi from "../../api/MessageApi";
+import GetFormatDate from "../../shared/GetFormatDate";
+import SpecialMessage from "./SpecialMessage";
 
 export default () => {
     const { messages, setMessages, selectedChat, messageBlockRef } = useChat();
@@ -41,14 +43,14 @@ export default () => {
                 offset: messages[isAbove ? messages.length - 1 : 0]._id,
                 limit: 30
             });
-            
+
             isLoadingMesasgeRef.current = false;
-            
+
             if (response) {
-                if(response.data.messages.length === 0){
+                if (response.data.messages.length === 0) {
                     return;
                 }
-                if(!isAbove){
+                if (!isAbove) {
                     offsetScroll.current = messageBlockRef.current.scrollHeight + messageBlockRef.current.scrollTop;
                 }
                 const newMessages = response.data.messages;
@@ -71,8 +73,7 @@ export default () => {
     }, []);
 
     useLayoutEffect(() => {
-        if(offsetScroll.current) {
-            console.log(messageBlockRef.current.scrollHeight - offsetScroll.current);
+        if (offsetScroll.current) {
             messageBlockRef.current.scrollTop = offsetScroll.current - messageBlockRef.current.scrollHeight;
             offsetScroll.current = null;
         }
@@ -81,15 +82,15 @@ export default () => {
 
         const observer = new IntersectionObserver(
             (entries) => {
-                if(isLoadingMesasgeRef.current){
+                if (isLoadingMesasgeRef.current || messages.length === 0) {
                     return;
                 }
                 entries.forEach(entry => {
-                    if(entry.target === topSentinel && entry.isIntersecting){
+                    if (entry.target === topSentinel && entry.isIntersecting) {
                         loadOtherMessages(true);
                     }
 
-                    if(entry.target === bottomSetinel && entry.isIntersecting){
+                    if (entry.target === bottomSetinel && entry.isIntersecting) {
                         loadOtherMessages(false);
                     }
                 });
@@ -106,23 +107,22 @@ export default () => {
         }
     }, [messages]);
 
-    useEffect(() => {
-        console.log("height: ", messageBlockRef.current.scrollHeight);
-        console.log("top: ", messageBlockRef.current.scrollTop);
-    })
-
-    useEffect(() => {
-        setInterval(() => {
-            console.log("height: ", messageBlockRef.current.scrollHeight);
-            console.log("top: ", messageBlockRef.current.scrollTop);
-        }, 1000)
-    }, [])
+    let date = GetFormatDate(messages?.[0]?.createdAt);
 
     return (<> <div ref={messageBlockRef} className={styles.container}>
         <div ref={bottomSentielRef} style={{ height: '1px' }}></div>
-        {messages.map(message =>
-            <Message onContextMenu={openContextMenu} key={message._id} message={message} />
-        )}
+        {messages.map((message, index) => {
+            let messageDate = GetFormatDate(message.createdAt);
+            let showDate = null;
+            if (date !== messageDate || index === messages.length - 1) {
+                showDate = date;
+                date = messageDate;
+            }
+            return <Fragment key={message._id}>
+                <Message onContextMenu={openContextMenu} message={message} />
+                {showDate && <SpecialMessage text={showDate}/>}
+            </ Fragment>
+        })}
         <div ref={topSentinelRef} style={{ height: '1px' }} />
     </div>
         {

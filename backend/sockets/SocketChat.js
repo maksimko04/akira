@@ -47,8 +47,9 @@ export default (io, socket) => {
     socket.on("send_message", async (data, callback) => {
         try {
             const { chatId, text, replied } = messageSchema.parse(data);
-            const message = await MessagesService.createMessage({ chatId, text, replied, authorId: socket.user.id });
 
+            const message = await MessagesService.createMessage({ chatId, text, replied, authorId: socket.user.id });
+            
             io.to(`chat_${chatId}`).except(socket.id).emit("receive_message", message);
 
             callback?.({ success: true, message });
