@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { io, Socket } from 'socket.io-client';
 import messageActions from "../constants/messageActions";
 import { useRef } from "react";
+import ScrollToElementWithLock from "../shared/ScrollToElementWithLock";
 
 const ChatContext = createContext(null);
 
@@ -15,10 +16,12 @@ export const ChatProvider = ({ children }) => {
     const [selectedChat, setSelectedChat] = useState(null);
     const [targetMessage, setTargetMessage] = useState(null);
     const textMessageRef = useRef(null);
+    const messageBlockRef = useRef(null);
+    const [focusedMessage, setFocusedMessage] = useState(null);
 
     const openChat = async (chat) => {
         try {
-            const response = await MessageApi.getChats(chat._id);
+            const response = await MessageApi.getMessages(chat._id);
             socket.emit("join_chat", { chatId: chat._id });
             setSelectedChat(chat);
             setMessages(response.data.messages);
@@ -50,6 +53,7 @@ export const ChatProvider = ({ children }) => {
             default: {
                 socket.emit("send_message", { chatId: selectedChat._id, text, replied: targetMessage?.messageId }, (response) => {
                     if (response && response.success) {
+                        console.log(response.message);
                         setMessages(prev => [response.message, ...prev]);
                     }
 
@@ -63,20 +67,30 @@ export const ChatProvider = ({ children }) => {
         return messages.find(message => message._id === messageId);
     }
 
-    const focusOnMessage = (messageId) => {
-        const message = document.getElementById(`message-${messageId}`);
-        message.scrollIntoView({
-            behavior: 'smooth',
-            block: 'center'
-        });
+    const focusOnMessage = async (messageId) => {
+        let message = document.getElementById(`message-${messageId}`);
+        let needDeleteTemporaryMessages = false;
+        if (!message) {
+            const response = await MessageApi.getMessages(selectedChat._id, {
+                direction: "both",
+                limit: 20,
+                offset: messageId
+            })
 
-        message.classList.remove("focus__on");
-        void message.offsetWidth;
-        message.classList.add("focus__on");
-
-        message.addEventListener('animationend', () => {
-            message.classList.remove("focus__on");
-        }, { once: true });
+            if (response) {
+                const oldMessages = response.data.messages;
+                const currentMessages = messages.map(message => ({ ...message, temp: true }));
+                const combined = [...currentMessages, ...oldMessages];
+                console.log(combined)
+                const combinedMassages = Array.from(
+                    new Map(combined.map(msg => [msg._id, msg])).values()
+                );
+                combinedMassages.sort((message1, message2) => message1._id < message2._id);
+                setMessages(combinedMassages);
+                needDeleteTemporaryMessages = true;
+            }
+        }
+        setFocusedMessage(messageId);
     }
 
     useEffect(() => {
@@ -99,6 +113,37 @@ export const ChatProvider = ({ children }) => {
         }
     }, []);
 
+    useEffect(() => {
+        if (!focusedMessage) return;
+
+        const message = document.getElementById(`message-${focusedMessage}`);
+
+        if (!message) {
+
+            setFocusedMessage(null);
+            return;
+        }
+
+        ScrollToElementWithLock(messageBlockRef.current, message, (isSuccess, unlock) => {
+            if(isSuccess){
+                message.classList.remove("focus__on");
+                void message.offsetWidth;
+                message.classList.add("focus__on");
+    
+                message.addEventListener('animationend', () => {
+                    message.classList.remove("focus__on");
+                }, { once: true });
+                
+                setTimeout(unlock, 300);
+                setFocusedMessage(null);
+                setMessages(prev => prev.filter(message => !message.temp));
+            }
+            else{
+                unlock();
+            }
+        })
+    }, [focusedMessage]);
+
     return (
         <ChatContext.Provider value={{
             messages,
@@ -112,7 +157,8 @@ export const ChatProvider = ({ children }) => {
             setTargetMessage,
             textMessageRef,
             getMessage,
-            focusOnMessage
+            focusOnMessage,
+            messageBlockRef
         }}>
             {children}
         </ChatContext.Provider>

@@ -1,10 +1,10 @@
 import checkRoleMiddleware from "../middleware/CheckRoleMiddleware.js";
 import MessagesService from "../services/MessagesService.js";
 import { Router } from "express";
-import { patternMessageValidator, repliedValidator, textValidator } from "../validation/MessageValidator.js";
+import { messagePaginationValidator, patternMessageValidator, repliedValidator, textValidator } from "../validation/MessageValidator.js";
 import Roles from "../models/Roles.js";
 import { finalValidator as validator } from "../validation/Validator.js"
-import { idBodyValidator, idPathValidator, idQueryValidator, paginationValidator } from "../validation/GeneralValidator.js";
+import { idBodyValidator, idPathValidator, idQueryValidator } from "../validation/GeneralValidator.js";
 import CheckAuthorization from "../middleware/CheckAuthorization.js";
 import ResponseService from "../services/ResponseService.js";
 
@@ -28,7 +28,7 @@ router.get("/:id",
     idPathValidator(),
     idQueryValidator("memberId", true),
     patternMessageValidator(true),
-    paginationValidator(),
+    messagePaginationValidator(),
     validator,
     catchAsync(async (req, res, next) => {
         const messages = await MessagesService.getMessages(
@@ -39,8 +39,7 @@ router.get("/:id",
                 memberId: req.query.memberId
             },
             {
-                limit: req.query.limit,
-                skip: req.query.skip
+                ...req.query
             });
 
         ResponseService.success(res, { messages });

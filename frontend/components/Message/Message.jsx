@@ -13,8 +13,6 @@ export default (props) => {
         return null;
     }
 
-    const repliedMessage = message.replied && getMessage(message.replied);
-
     const getTimeInDay = (time) => {
         return new Intl.DateTimeFormat('uk-UA', {
             hour: '2-digit',
@@ -29,10 +27,10 @@ export default (props) => {
             { selectedChat.type !== typesChat.PRIVATE && message.author._id !== user && 
                 <p className={styles.author}>{message.author.name}</p>
             }
-            {repliedMessage &&
-                <div onClick={() => focusOnMessage(repliedMessage._id)} className={styles.replied__section}>
-                    <p className={styles.original__author}>{repliedMessage.author.name}</p>
-                    <p className={styles.original__text}>{repliedMessage.text}</p>
+            {message.replied &&
+                <div onClick={() => focusOnMessage(message.replied._id)} className={styles.replied__section}>
+                    <p className={styles.original__author}>{message.replied.author.name}</p>
+                    <p className={styles.original__text}>{message.replied.text}</p>
                 </div>
             }
             <div className={styles.content__message}>

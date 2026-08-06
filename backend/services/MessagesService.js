@@ -28,17 +28,38 @@ class MessagesService {
             }
         }
 
-        return await Message.create({
+        const message = await Message.create({
             chat: chatId,
             author: authorId,
             text: text,
             replied: replied,
             attachments: attachments,
         });
+
+        return await message
+            .populate("author", "name")
+            .populate({
+                path: "replied",
+                select: "text author",
+                populate: {
+                    path: "author",
+                    select: "name"
+                }
+            });
     }
 
     async getMessage(messageId) {
-        return await Message.findById(messageId).populate("author", "name");
+        return await Message
+            .findById(messageId)
+            .populate("author", "name")
+            .populate({
+                path: "replied",
+                select: "text author",
+                populate: {
+                    path: "author",
+                    select: "name"
+                }
+            });
     }
 
     async getMessages(userId, filter, pagination) {
@@ -48,12 +69,8 @@ class MessagesService {
             throw ApiError.forbidden();
         }
 
-        if (memberId && !await ChatService.checkMemberInChat(memberId, chatId)) {
-            throw ApiError.badRequest("MEMBER_NOT_EXISTS");
-        }
-
         const limit = pagination.limit || 20;
-        const skip = pagination.skip || 0;
+        const directionPagination = pagination.direction;
 
         const query = { chat: chatId };
 
@@ -62,19 +79,72 @@ class MessagesService {
         }
 
         if (memberId) {
-            if (!await ChatService.checkMemberInChat(memberId, chatId)) {
+            if (!(memberId === userId) && !await ChatService.checkMemberInChat(memberId, chatId)) {
                 throw ApiError.badRequest("MEMBER_NOT_EXISTS");
             }
             query.author = memberId;
         }
 
-        const messages = await Message.find(query)
-            .sort({ _id: -1 })
-            .limit(limit)
-            .skip(skip)
-            .populate("author", "name");
+        let olderMessages = [];
+        let newerMessages = [];
+        let markMessageArray = [];
 
-        return messages;
+        const queryExecute = (additionalQuery = {}, sortDirection = -1) =>
+            Message.find({
+                ...query,
+                ...additionalQuery
+            })
+                .sort({ _id: sortDirection })
+                .limit(limit)
+                .populate("author", "name")
+                .populate({
+                    path: "replied",
+                    select: "text author",
+                    populate: {
+                        path: "author",
+                        select: "name"
+                    }
+                });
+
+        if (directionPagination) {
+            const offsetMessage = pagination.offset;
+
+            if (offsetMessage) {
+
+                switch (directionPagination) {
+                    case "both": {
+                        let markMessage;
+                        [newerMessages, markMessage, olderMessages] = await Promise.all([
+                            queryExecute({ _id: { $gt: offsetMessage } }, 1),
+                            await Message.findById(offsetMessage).populate("author", "name"),
+                            queryExecute({ _id: { $lt: offsetMessage } })
+                        ])
+                        newerMessages.reverse();
+                        if (markMessage) {
+                            markMessageArray = [markMessage];
+                        }
+                        break;
+                    }
+                    case "below": {
+                        newerMessages = await queryExecute({ _id: { $gt: offsetMessage } }, 1);
+                        newerMessages.reverse();
+                        break;
+                    }
+                    case "above": {
+                        olderMessages = await queryExecute({ _id: { $lt: offsetMessage } });
+                        break;
+                    }
+                }
+            }
+            else {
+                throw ApiError.badRequest("INVALID_PAGINATION");
+            }
+        }
+        else {
+            newerMessages = await queryExecute();
+        }
+
+        return [...newerMessages, ...markMessageArray, ...olderMessages];
     }
 
     async deleteMessage(userId, messageId) {
@@ -139,7 +209,16 @@ class MessagesService {
             message.text = text;
             message.edited = true;
             await message.save();
-            return message;
+            return message
+                .populate("author", "name")
+                .populate({
+                    path: "replied",
+                    select: "text author",
+                    populate: {
+                        path: "author",
+                        select: "name"
+                    }
+                });;
         }
     }
 }

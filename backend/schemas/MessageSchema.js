@@ -10,7 +10,10 @@ const Message = new mongoose.Schema({
         type: String,
         required: true
     },
-    replied: mongoose.Schema.Types.ObjectId,
+    replied: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Message"
+    },
     attachments: {
         type: [String],
     },

@@ -1,6 +1,7 @@
 import { ThemeProvider } from "next-themes";
-import {ToastProvider} from "../providers/toastProvider";
+import { ToastProvider } from "../providers/toastProvider";
 import "@/global.css"
+import DisableAutoRestoreScrollComponent from "@/shared/DisableAutoRestoreScrollComponent";
 
 export default function RootLayout({ children }) {
   return (
@@ -10,6 +11,7 @@ export default function RootLayout({ children }) {
     // className}
     >
       <body className="min-h-full flex flex-col">
+        <DisableAutoRestoreScrollComponent />
         <ThemeProvider
 
           attribute="class"
