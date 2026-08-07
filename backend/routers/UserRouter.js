@@ -28,6 +28,16 @@ router.post("/login",
         responseService.success(res, { user });
     }));
 
+router.delete("/logout", catchAsync(async (req, res, next) => {
+    res.clearCookie('token', {
+        httpOnly: true,
+        secure: false,
+        sameSite: 'lax'
+    });
+
+    responseService.success(res, {});
+}));
+
 router.post("/registration",
     usernameValidator(),
     passwordValidator(),

@@ -10,6 +10,7 @@ import { useChat } from "../../providers/ChatContext";
 
 export default () => {
     const { openChat, selectedChat } = useChat();
+    console.log(selectedChat);
     const [chats, setChats] = useState([]);
 
     useEffect(() => {
@@ -26,11 +27,12 @@ export default () => {
     }, []);
 
     return (<div className={styles.container}>
+        
         {
             chats.map(chat =>
                 <button onClick={() => openChat(chat)}
-                    className={`${styles.chat} ${chat._id === selectedChat && styles.selected__chat}`}
-                    key={chat._id}>
+                className={`${styles.chat} ${selectedChat && chat._id === selectedChat._id && styles.selected__chat}`}
+                key={chat._id}>
                     <Image src={sunIcon} alt="sun" />
                     <div>
                         <p>{chat.title}</p>

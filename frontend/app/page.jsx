@@ -1,7 +1,7 @@
 "use client"
 
-import Lending from "@/components/Lending";
-import Header from "../components/Header";
+import Lending from "@/components/NoAuth/Lending";
+import Header from "../components/NoAuth/Header";
 import useMe from "@/hooks/useMe";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";

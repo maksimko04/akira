@@ -90,7 +90,28 @@ ul {
   height: 100%;
 }
 
-button:has(img) {
+.svg-icon {
+  display: inline-block;
+
+  -webkit-mask-image: var(--src);
+  mask-image: var(--src);
+
+  -webkit-mask-mode: alpha;
+  mask-mode: alpha;
+
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+
+  background-color: var(--text-color);
+
+  height: 100%;
+  aspect-ratio: 1 / 1;
+}
+
+button:has(> .svg-icon:only-child),
+button:has(> img:only-child) {
   background: transparent;
   height: 100%;
 }
@@ -134,11 +155,19 @@ div.invalid::after {
   left: 0;
 }
 
-input[type="search"]:placeholder-shown {
-  background-position: right 10px center;
-  background-size: 20px 20px;
-  background-repeat: no-repeat;
+.div-search:has(input[type="search"]:placeholder-shown)::after {
+  content: "";
+      position: absolute;
+      top: 50%;
+      right: 0;
+      translate: -50% -50%;
+      height: 50%;
+      aspect-ratio: 1 / 1;
+      background-color: var(--text-color);
+      -webkit-mask: url("/icon-search_black.svg") center/contain no-repeat;
+      mask: url("/icon-search_black.svg") center/contain no-repeat;
 }
+
 
 input[type="checkbox"] {
   appearance: none;
@@ -186,9 +215,12 @@ input[type="checkbox"] {
 }
 
 @keyframes animation__focus_on {
-  0%, 100% {
+
+  0%,
+  100% {
     background-color: var(--own-color);
   }
+
   50% {
     background-color: color-mix(in srgb, var(--own-color) 40%, rgb(38, 115, 216));
   }

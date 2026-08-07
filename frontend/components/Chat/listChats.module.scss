@@ -1,8 +1,7 @@
 .container {
     width: 400px;
-    height: 100vh;
+    height: max-content;
     overflow: auto;
-    background-color: var(--vidget-color1);
     border-right: var(--border-color) 1px solid;
 }
 
@@ -18,8 +17,9 @@
     width: 100%;
     transition: background-color 0.1s ease-in;
     border-radius: 0;
+    background: transparent;
 }
 
 .selected__chat {
-    background-color: var(--primary-color);
+    background-color: color-mix(in srgb, var(--vidget-color3) 80%, transparent);
 }

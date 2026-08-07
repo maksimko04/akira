@@ -1,6 +1,6 @@
 "use client"
 
-import Header from "@/components/Header"
+import Header from "@/components/NoAuth/Header"
 import UserApi from "@/api/UserApi";
 import { useRef } from "react";
 import responseStatuses from "@/constants/responseStatuses";

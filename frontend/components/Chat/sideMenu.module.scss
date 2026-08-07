@@ -1,0 +1,25 @@
+.container {
+    --side-menu-width: 400px;
+    width: var(--side-menu-width);
+    height: 100vh;
+    overflow: hidden;
+    background-color: var(--vidget-color1);
+    border-right: var(--border-color) 1px solid;
+}
+
+.control__panel {
+    display: flex;
+    height: 50px;
+    border-bottom: 2px var(--border-color) solid;
+    gap: 20px;
+    padding-left: 10px;
+    align-items: center;
+}
+
+.control__panel input {
+    background-color: color-mix(in srgb, var(--vidget-color2) 80%, transparent);
+    border: none;
+    border-radius: var(--border-radius);
+    height: 40px;
+    padding-left: 10px;
+}

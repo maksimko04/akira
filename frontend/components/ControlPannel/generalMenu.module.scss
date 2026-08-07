@@ -1,0 +1,50 @@
+.animated__container {
+    overflow: hidden;
+    animation: open__menu 0.2s ease-in forwards;
+    background-color: var(--vidget-color2);
+    height: 100%;
+    position: absolute;
+}
+
+.container {
+    width: var(--side-menu-width);;
+}
+
+.option {
+    width: 100%;
+    background: transparent;
+    border-radius: 0;
+    color: var(--text-color);
+    justify-content: left;
+    font-size: 20px;
+    padding: 10px;
+    transition: background-color 0.2 ease-in;
+}
+
+.option:hover {
+    background-color: color-mix(in srgb, var(--vidget-color3) 80%, transparent);
+}
+
+.animated__container:global(.closing__menu) {
+    animation: close__menu 0.2s ease-in forwards;
+}
+
+@keyframes open__menu {
+    0% {
+        width: 0;
+    }
+
+    100% {
+        width: 100%;
+    }
+}
+
+@keyframes close__menu {
+    0% {
+        width: 100%;
+    }
+
+    100% {
+        width: 0;
+    }
+}

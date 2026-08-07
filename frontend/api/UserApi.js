@@ -16,6 +16,10 @@ class UserApi {
     async getUser(userId){
         return await api.get(`/user/${userId}`)
     }
+
+    async logout(){
+        return await api.delete("/user/logout");
+    }
 }
 
 export default new UserApi();
