@@ -9,6 +9,7 @@ import typesToast from "@/constants/typesToast";
 import { usernameRegex, emailRegex, nameRegex, passwordRegex } from "@/constants/regexes";
 import serverResponses from "../../constants/serverResponses";
 import {useRouter} from "next/navigation" 
+import { useAuthStore } from "../../store/useAuthStore";
 
 import styles from "./styles.module.scss"
 

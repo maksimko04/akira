@@ -6,11 +6,23 @@ import checkRoleMiddleware from "../middleware/checkRoleMiddleware.js";
 import Roles from "../models/Roles.js";
 import { param } from "express-validator";
 import responseService from "../services/ResponseService.js";
-import { idPathValidator } from "../validation/GeneralValidator.js";
+import { idPathValidator, searchText } from "../validation/GeneralValidator.js";
+import UserService from "../services/UserService.js";
+import CheckAuthorization from "../middleware/CheckAuthorization.js";
 
 const router = new Router();
 
 const catchAsync = (fn) => (req, res, next) => fn(req, res, next).catch(next);
+
+router.get("/global",
+    CheckAuthorization,
+    searchText(),
+    validator,
+    catchAsync(async (req, res, next) => {
+        const { searchText } = req.query;
+        const users = await UserService.findUsers(req.user.id, searchText);
+        responseService.success(res, { users });
+    }));
 
 router.post("/login",
     emailValidator(),

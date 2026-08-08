@@ -18,9 +18,7 @@ const actions = [
         text: "New Group",
         action: async (router) => {
             try{
-                console.log("SDF")
                 const response = await UserApi.logout();
-                console.log("SD")
                 router.replace("/login");
             }
             catch{}

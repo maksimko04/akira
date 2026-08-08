@@ -37,3 +37,10 @@ export const arrayOfIdValidator = (arrName, isOptional = false) => createValidat
     (chain) => chain
         .isMongoId().withMessage(`INVALID_FORMAT_${arrName.toUpperCase()}`)
 );
+
+export const searchText = (isOptional = true) => createValidator(
+    query("searchText"),
+    isOptional,
+    (chain) => chain
+        .isString().withMessage("INVALID_FIELD")
+);

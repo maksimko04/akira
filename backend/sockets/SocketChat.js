@@ -1,6 +1,7 @@
 import ChatService from "../services/ChatService.js";
 import { z } from "zod"
 import MessagesService from "../services/MessagesService.js";
+import UserService from "../services/UserService.js";
 
 const mongoIdRegex = /^[0-9a-fA-F]{24}$/;
 
@@ -18,6 +19,10 @@ const messageEditSchema = z.object({
     text: z.string(),
     messageId: z.string().regex(mongoIdRegex, "INVALID_ID"),
     chatId: z.string().regex(mongoIdRegex, "INVALID_ID")
+});
+
+const userIdSchema = z.object({
+    userId: z.string().regex(mongoIdRegex, "INVALID_ID")
 });
 
 export default (io, socket) => {
@@ -49,7 +54,7 @@ export default (io, socket) => {
             const { chatId, text, replied } = messageSchema.parse(data);
 
             const message = await MessagesService.createMessage({ chatId, text, replied, authorId: socket.user.id });
-            
+
             io.to(`chat_${chatId}`).except(socket.id).emit("receive_message", message);
 
             callback?.({ success: true, message });
@@ -59,7 +64,7 @@ export default (io, socket) => {
         }
     });
 
-    socket.on('edit_message', async (data, callback) => {
+    socket.on("edit_message", async (data, callback) => {
         try {
             const { chatId, messageId, text } = messageEditSchema.parse(data);
             const editedMessage = await MessagesService.editMessage(socket.user.id, messageId, text);
@@ -72,4 +77,32 @@ export default (io, socket) => {
             callback?.({ success: false, error: error.message });
         }
     });
+
+    socket.on("open_uncreated_chat", async (data, callback) => {
+        try {
+            const { userId } = userIdSchema.parse(data);
+
+            await UserService.getUser(userId);
+
+            socket.join(`uncreated_chat_${[socket.user.id, userId].sort().join(".")}`);
+            callback?.({ success: true });
+        }
+        catch (error) {
+            callback?.({ success: false, error: error.message });
+        }
+    });
+
+    socket.on("created_private_chat", async (data, callback) => {
+        const { userId } = userIdSchema.parse(data);
+
+        const chat = await ChatService.findPrivateChat(socket.user.id, userId);
+
+        const roomName = `uncreated_chat_${[socket.user.id, userId].sort().join(".")}`;
+
+        io.to(roomName).except(socket.id).emit("uncreated_chat_created", chat);
+
+        io.in(roomName).socketsLeave(roomName);
+
+        callback?.({success: true});
+    })
 }

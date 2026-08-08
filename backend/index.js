@@ -48,6 +48,8 @@ app.set('io', io);
 io.use(SocketAuth);
 
 io.on("connection", socket => {
+    socket.join(`user_${socket.user.id}`);
+
     SocketChat(io, socket);
 })
 

@@ -1,8 +1,17 @@
 import api from "./AxiosInstance"
 
 class ChatApi {
-    async getChats(){
-        return await api.get("/chat/");
+    async getChats(searchText){
+        const query = searchText ? `?searchText=${searchText}` : "";
+        return await api.get("/chat" + query);
+    }
+
+    async createChat(body){
+        return await api.post("/chat/create", body)
+    }
+
+    async deleteChat(chatId){
+        return await api.delete(`/chat/${chatId}`);
     }
 }
 

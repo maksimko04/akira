@@ -46,7 +46,7 @@ export default () => {
                 ></div>
             </button>
             <div className={`${styles.fieldSearch} div-search`}>
-                <input value={searchText} onInput={(event) => setSearchText(event.target.value)} type="search" placeholder="search..." />
+                <input value={searchText} onChange={(event) => setSearchText(event.target.value)} type="search" placeholder="search..." />
 
             </div>
         </div>

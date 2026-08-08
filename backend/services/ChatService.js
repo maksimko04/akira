@@ -6,6 +6,7 @@ import MemberRights from "../models/MemberRights.js";
 import chatInfo from "../models/ChatInfo.js";
 import ChatTypes from "../models/ChatTypes.js";
 import UserService from "./UserService.js";
+import mongoose from "mongoose";
 
 //ARRAY CHAT INFO
 const chatInfoArray = Object.keys(chatInfo)
@@ -80,26 +81,77 @@ class ChatService {
         return await Chat.findById(chatId);
     }
 
-    async getUserChats(userId, pagination) {
-        const limit = pagination.limit || 20;
-        const skip = pagination.skip || 0;
-
-        let chats = await Chat.find({ "members.user": userId })
-            .sort({ _id: -1 })
-            .limit(limit)
-            .skip(skip);
-
-
-        chats = await Promise.all(chats.map(async chat => {
-            if(chat.type !== chatTypes.PRIVATE){
-                return chat;
+    async findPrivateChat(userId1, userId2){
+        return await Chat.findOne({
+            type: chatTypes.PRIVATE, members: {
+                $all: [
+                    { $elemMatch: { user: userId1 } },
+                    { $elemMatch: { user: userId2 } }
+                ]
             }
+        });
+    }
 
-            let interlocutorId = chat.members[0].user.toString() !== userId ? chat.members[0].user : chat.members[1].user;
-            const user = await UserService.getUser(interlocutorId);
-            chat.title = user.username;
-            return chat
-        }));
+    async getUserChats(userId, searchText) {
+        const userObjectId = new mongoose.Types.ObjectId(userId);
+
+        let query = [{
+            $match: { "members.user": userObjectId }
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "members.user",
+                foreignField: "_id",
+                as: "users"
+            },
+        },
+        {
+            $addFields: {
+                title: {
+                    $cond: {
+                        if: { $eq: ["$type", ChatTypes.PRIVATE] },
+                        then: {
+                            $arrayElemAt: [{
+                                $map: {
+                                    input: {
+                                        $filter: {
+                                            input: "$users",
+                                            as: "m",
+                                            cond: { $ne: ["$$m._id", userObjectId] }
+                                        }
+                                    },
+                                    as: "otherUser",
+                                    in: "$$otherUser.username"
+                                },
+                            }, 0]
+                        },
+                        else: "$title"
+                    }
+                }
+            }
+        },];
+
+        if (searchText) {
+            query.push(
+                {
+                    $match: {
+                        title: { $regex: searchText, $options: "i" }
+                    }
+                }
+            );
+        }
+
+        query.push(
+            {
+                $project: {
+                    users: 0
+                }
+            },
+            { $sort: { _id: -1 } },
+        );
+
+        let chats = await Chat.aggregate(query);
 
         return chats;
     }
@@ -107,7 +159,7 @@ class ChatService {
     async createPrivateChat(userId, chatConfiguration) {
         const otherUserId = chatConfiguration.members[0];
 
-        if(userId === otherUserId){
+        if (userId === otherUserId) {
             throw ApiError.badRequest();
         }
 
@@ -217,7 +269,7 @@ class ChatService {
     }
 
     async delete(actorId, chatId) {
-        const chat = getChat(chatId);
+        const chat = await this.getChat(chatId);
         if (!chat) {
             throw ApiError.badRequest("CHAT_NOT_EXISTS");
         }
@@ -233,7 +285,7 @@ class ChatService {
             return;
         }
 
-        await Chat.findByIdAndDelete(chatId);
+        return await Chat.findByIdAndDelete(chatId);
     }
 
     async editInfoGroup(actorId, chatId, info) {
@@ -290,7 +342,7 @@ class ChatService {
                 throw ApiError.badRequest("MEMBER_ALREADY_EXISTS");
             }
 
-            if(!await UserService.getUser(newMemberId)){
+            if (!await UserService.getUser(newMemberId)) {
                 throw ApiError.badRequest("USER_NOT_EXISTS");
             }
 

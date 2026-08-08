@@ -20,6 +20,10 @@ class UserApi {
     async logout(){
         return await api.delete("/user/logout");
     }
+
+    async globalSearch(searchText){
+        return await api.get(`/user/global?searchText=${searchText}`);
+    }
 }
 
 export default new UserApi();

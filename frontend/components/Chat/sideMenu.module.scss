@@ -2,7 +2,7 @@
     --side-menu-width: 400px;
     width: var(--side-menu-width);
     height: 100vh;
-    overflow: hidden;
+    overflow: scroll;
     background-color: var(--vidget-color1);
     border-right: var(--border-color) 1px solid;
 }

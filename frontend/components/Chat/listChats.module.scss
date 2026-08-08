@@ -20,6 +20,18 @@
     background: transparent;
 }
 
+.text__info {
+    text-align: left;
+}
+
 .selected__chat {
     background-color: color-mix(in srgb, var(--vidget-color3) 80%, transparent);
+}
+
+.separated__label {
+    background-color: var(--vidget-color2);
+    height: 35px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }

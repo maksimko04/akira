@@ -7,7 +7,7 @@ import { textValidator, repliedValidator } from "../validation/MessageValidator.
 import { finalValidator as validator } from "../validation/Validator.js"
 import CheckAuthorization from "../middleware/CheckAuthorization.js";
 import ChatService from "../services/ChatService.js";
-import { paginationValidator, idPathValidator, arrayOfIdValidator, idBodyValidator } from "../validation/GeneralValidator.js";
+import { paginationValidator, idPathValidator, arrayOfIdValidator, idBodyValidator, searchText } from "../validation/GeneralValidator.js";
 import { chatTypeValidator, memberRightsValidator, memberRoleValidator, membersValidator, titleValidator } from "../validation/ChatValidator.js";
 
 const router = new Router();
@@ -15,11 +15,11 @@ const router = new Router();
 const catchAsync = (fn) => (req, res, next) => fn(req, res, next).catch(next);
 
 router.get("/", CheckAuthorization,
-    paginationValidator(),
+    searchText(),
     validator,
     catchAsync(async (req, res, next) => {
-        const { limit, skip } = req.query
-        const chats = await ChatService.getUserChats(req.user.id, { limit, skip })
+        const { searchText } = req.query;
+        const chats = await ChatService.getUserChats(req.user.id, searchText)
 
         responseService.success(res, { chats });
     })
@@ -41,7 +41,16 @@ router.delete("/:id", CheckAuthorization,
     idPathValidator(),
     validator,
     catchAsync(async (req, res, next) => {
-        await ChatService.delete(req.user.id, req.params.id);
+        const chat = await ChatService.delete(req.user.id, req.params.id);
+
+        const io = req.app.get("io");
+
+        chat.members.forEach(member => {
+            if(member.user === req.user.id){
+                return;
+            }
+            io.to(`user_${member.user}`).emit("deleted_chat", chat._id);
+        });
 
         responseService.success(res, {});
     })

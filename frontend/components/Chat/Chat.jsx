@@ -9,20 +9,50 @@ import { useChat } from "../../providers/ChatContext";
 import MessagesBlock from "../Message/MessagesBlock";
 import ChatHeader from "./ChatHeader";
 import { useState } from "react";
-import ContextMenuMessage from "../Message/ContextMenuMessage";
+import ContextMenuMessage from "../Message/ContextMenu.jsx";
+import ChatApi from "../../api/ChatApi";
+import typesChat from "../../constants/typesChat";
+import { useEffect } from "react";
+import { useRef } from "react";
 
 export default (props) => {
     const [user, isLoading] = useMe();
-    const { selectedChat, sendMessage, targetMessage, textMessageRef } = useChat();
+    const { openChat, selectedChat, setSelectedChat, sendMessage, targetMessage, textMessageRef, socket } = useChat();
+    const messageNeedSend = useRef(false);
+
+    const onSubmit = async event => {
+        event.preventDefault();
+        if (selectedChat.uncreated) {
+            try {
+                const response = await ChatApi.createChat({
+                    type: typesChat.PRIVATE,
+                    members: [selectedChat.userId]
+                });
+
+                socket.emit("created_private_chat", { userId: selectedChat.userId });
+
+                openChat(response.data.chat);
+
+                messageNeedSend.current = true;
+            }
+            catch { }
+            return;
+        }
+
+        sendMessage(textMessageRef.current.value);
+        textMessageRef.current.value = "";
+    }
+
+    useEffect(() => {
+        if (messageNeedSend.current) {
+            sendMessage(textMessageRef.current.value);
+            textMessageRef.current.value = "";
+            messageNeedSend.current = false;
+        }
+    }, [selectedChat]);
 
     if (isLoading) {
         return null;
-    }
-
-    const onSubmit = event => {
-        event.preventDefault();
-        sendMessage(textMessageRef.current.value)
-        textMessageRef.current.value = "";
     }
 
     return (<div className={styles.container}>

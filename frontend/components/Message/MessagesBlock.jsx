@@ -3,13 +3,52 @@ import { useChat } from "../../providers/ChatContext";
 import Message from "./Message";
 
 import styles from "./messagesBlock.module.scss";
-import ContextMenuMessage from "./ContextMenuMessage";
 import MessageApi from "../../api/MessageApi";
 import GetFormatDate from "../../shared/GetFormatDate";
 import SpecialMessage from "./SpecialMessage";
+import ContextMenu from "./ContextMenu.jsx";
+import messageActions from "../../constants/messageActions.js";
+
+const contextMenuActions = [
+    {
+        text: "Edit",
+        hideWhen: (user, {message}) => {
+            return user !== message.author._id;
+        },
+
+        action: ({message, setTargetMessage, textMessageRef}) => {
+            textMessageRef.current.focus();
+            textMessageRef.current.value = message.text;
+            setTargetMessage({
+                action: messageActions.edit,
+                messageId: message._id,
+                description: "Edit message",
+                text: message.text
+            });
+        }
+    },
+    {
+        text: "Copy message",
+        action: ({message}) => {
+            navigator.clipboard.writeText(message.text);
+        }
+    },
+    {
+        text: "Reply",
+        action: ({message, setTargetMessage, textMessageRef}) => {
+            textMessageRef.current.focus();
+            setTargetMessage({
+                action: messageActions.reply,
+                messageId: message._id,
+                description: `Reply to ${message.author.name}`,
+                text: message.text
+            });
+        }
+    }
+];
 
 export default () => {
-    const { messages, setMessages, selectedChat, messageBlockRef } = useChat();
+    const { messages, setMessages, selectedChat, messageBlockRef, setTargetMessage, textMessageRef } = useChat();
     const [infoContextMenu, setInfoContextMenu] = useState(null);
 
     const topSentinelRef = useRef(null);
@@ -25,7 +64,11 @@ export default () => {
                 x: event.clientX,
                 y: event.clientY
             },
-            message
+            data: {
+                message,
+                setTargetMessage,
+                textMessageRef
+            }
         });
     }
 
@@ -127,7 +170,7 @@ export default () => {
     </div>
         {
             infoContextMenu &&
-            <ContextMenuMessage info={infoContextMenu} />
+            <ContextMenu actions={contextMenuActions} info={infoContextMenu} />
         }
     </>)
 };

@@ -49,4 +49,3 @@ export const memberRightsValidator = (isOptional = false) => createValidator(
     (chain) => chain
         .isIn(rights).withMessage("INVALID_TYPE")
 );
-
