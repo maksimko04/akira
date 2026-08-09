@@ -2,7 +2,8 @@
     --side-menu-width: 400px;
     width: var(--side-menu-width);
     height: 100vh;
-    overflow: scroll;
+    overflow: auto;
+    overflow-x: hidden;
     background-color: var(--vidget-color1);
     border-right: var(--border-color) 1px solid;
 }
