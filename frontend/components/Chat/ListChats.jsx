@@ -56,7 +56,7 @@ export default (props) => {
                 return type === "global" ? obj.name : obj.title;
             }
             case "additinalInfo": {
-                return type === "global" ? "@" + obj.username : obj.title;
+                return type === "global" ? "@" + obj.username : obj.lastMessage;
             }
         }
     }
@@ -75,7 +75,7 @@ export default (props) => {
                     <Image src={sunIcon} alt="sun" />
                     <div className={styles.text__info}>
                         <p>{getChatInfo(chat, "title")}</p>
-                        <p>{getChatInfo(chat, "additinalInfo")}</p>
+                        <p className={styles.additional__info}>{getChatInfo(chat, "additinalInfo")}</p>
                     </div>
                 </button>
             )

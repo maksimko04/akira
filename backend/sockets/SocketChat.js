@@ -57,6 +57,12 @@ export default (io, socket) => {
 
             io.to(`chat_${chatId}`).except(socket.id).emit("receive_message", message);
 
+            const chat = await ChatService.getChat(chatId);
+
+            chat.members.forEach(member => {
+                io.to(`user_${member.user}`).emit("last_message_updated", { chatId, messageText: message.text, isChatActivity: true });
+            })
+
             callback?.({ success: true, message });
         }
         catch (error) {
@@ -70,6 +76,13 @@ export default (io, socket) => {
             const editedMessage = await MessagesService.editMessage(socket.user.id, messageId, text);
 
             io.to(`chat_${chatId}`).except(socket.id).emit("edited_message", editedMessage);
+
+            if (editedMessage.isLastMessage) {
+                const chat = await ChatService.getChat(chatId);
+                chat.members.forEach(member => {
+                    io.to(`user_${member.user}`).emit("last_message_updated", { chatId, messageText: editedMessage.text });
+                })
+            }
 
             callback?.({ success: true, editedMessage });
         }
@@ -103,6 +116,6 @@ export default (io, socket) => {
 
         io.in(roomName).socketsLeave(roomName);
 
-        callback?.({success: true});
+        callback?.({ success: true });
     })
 }

@@ -7,6 +7,7 @@ import chatInfo from "../models/ChatInfo.js";
 import ChatTypes from "../models/ChatTypes.js";
 import UserService from "./UserService.js";
 import mongoose from "mongoose";
+import MessagesService from "./MessagesService.js";
 
 //ARRAY CHAT INFO
 const chatInfoArray = Object.keys(chatInfo)
@@ -81,7 +82,7 @@ class ChatService {
         return await Chat.findById(chatId);
     }
 
-    async findPrivateChat(userId1, userId2){
+    async findPrivateChat(userId1, userId2) {
         return await Chat.findOne({
             type: chatTypes.PRIVATE, members: {
                 $all: [
@@ -148,10 +149,19 @@ class ChatService {
                     users: 0
                 }
             },
-            { $sort: { _id: -1 } },
+            { $sort: { lastActivity: -1 } },
         );
 
         let chats = await Chat.aggregate(query);
+
+        chats = await Promise.all(chats.map(async chat => {
+            const message = await MessagesService.getLastMessage(chat._id)
+            if(message){
+                chat.lastMessage = message.text;
+            }
+
+            return chat;
+        }));
 
         return chats;
     }
@@ -159,14 +169,22 @@ class ChatService {
     async createPrivateChat(userId, chatConfiguration) {
         const otherUserId = chatConfiguration.members[0];
 
+        const user = await UserService.getUser(userId);
+
+        if (!user) {
+            throw ApiError.badRequest();
+        }
+
         if (userId === otherUserId) {
             throw ApiError.badRequest();
         }
 
-        if (!await UserService.getUser(otherUserId)) {
+        const otherUser = await UserService.getUser(otherUserId);
+
+        if (!otherUser) {
             throw ApiError.badRequest("USER_NOT_EXISTS");
         }
-        const chat = await Chat.findOne({
+        const isChatExists = await Chat.exists({
             type: chatTypes.PRIVATE, members: {
                 $all: [
                     { $elemMatch: { user: userId } },
@@ -174,7 +192,7 @@ class ChatService {
                 ]
             }
         });
-        if (chat) {
+        if (isChatExists) {
             throw ApiError.badRequest("CHAT_ALREADY_EXISTS");
         }
         const membersInDatabase = [
@@ -192,7 +210,11 @@ class ChatService {
 
         chatConfiguration.members = membersInDatabase;
 
-        return await Chat.create(chatConfiguration);
+        const chat = (await Chat.create(chatConfiguration)).toObject();
+
+        chat.title = otherUser.name;
+        chat.createdBy = user.name;
+        return chat;
     }
 
     async createGroup(userId, chatConfiguration) {

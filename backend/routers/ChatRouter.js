@@ -33,6 +33,15 @@ router.post("/create", CheckAuthorization,
     catchAsync(async (req, res, next) => {
         const chat = await ChatService.create(req.user.id, req.body);
 
+        const io = req.app.get("io");
+
+        chat.members.forEach(member => {
+            if(member.user === req.user.id){
+                return;
+            }
+            io.to(`user_${member.user}`).emit("created_chat", chat);
+        });
+
         responseService.success(res, { chat });
     })
 );

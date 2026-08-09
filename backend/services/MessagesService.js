@@ -36,6 +36,9 @@ class MessagesService {
             attachments: attachments,
         });
 
+        chat.lastActivity = Date.now();
+        chat.save();
+
         return await message.populate([
             { path: "author", select: "name" },
             {
@@ -57,6 +60,12 @@ class MessagesService {
                     populate: { path: "author", select: "name" }
                 }
             ]);
+    }
+
+    async getLastMessage(chatId) {
+        return await Message.findOne({ chat: chatId })
+            .sort({ createdAt: -1 })
+            .limit(1);
     }
 
     async getMessages(userId, filter, pagination) {
@@ -179,7 +188,7 @@ class MessagesService {
     }
 
     async editMessage(userId, messageId, text) {
-        const message = await this.getMessage(messageId);
+        let message = await this.getMessage(messageId);
 
         if (!message) {
             throw ApiError.badRequest("MESSAGE_NOT_EXISTS");
@@ -205,7 +214,13 @@ class MessagesService {
             message.text = text;
             message.edited = true;
             await message.save();
-            return message
+
+            const hasNewerMessages = await Message.exists({
+                chat: chat._id,
+                createdAt: { $gt: message.createdAt }
+            });
+
+            message = await message
                 .populate([
                     { path: "author", select: "name" },
                     {
@@ -214,6 +229,10 @@ class MessagesService {
                         populate: { path: "author", select: "name" }
                     }
                 ]);
+
+            message.isLastMessage = !hasNewerMessages;
+
+            return message;
         }
     }
 }

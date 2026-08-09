@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useDebugValue, useState } from "react";
 import MessageApi from "../api/MessageApi";
 import { useEffect } from "react";
 import { io, Socket } from 'socket.io-client';
@@ -135,10 +135,42 @@ export const ChatProvider = ({ children }) => {
             }));
         });
 
+        socket.on("created_chat", chat => {
+            setChats(prev => {
+                if (chat.type === typesChat.PRIVATE) {
+                    chat.title = chat.createdBy;
+                }
+
+                return [chat, ...prev];
+            });
+        })
+
         socket.on("deleted_chat", chatId => {
             setSelectedChat(prev => prev?._id === chatId ? null : prev);
             setChats(prev => prev.filter(chat => chat._id !== chatId));
         })
+
+        socket.on("last_message_updated", ({ chatId, messageText, isChatActivity }) => {
+            setChats(prev => {
+                let newChats = prev.map(chat => {
+                    if (chat._id === chatId) {
+                        return {
+                            ...chat,
+                            lastMessage: messageText,
+                            lastActivity: (isChatActivity ? new Date().toISOString() : chat.lastActivity)
+                        };
+                    }
+                    return chat;
+                })
+
+                return newChats.sort((chat1, chat2) => {
+                    const time1 = new Date(chat1.lastActivity).getTime();
+                    const time2 = new Date(chat2.lastActivity).getTime();
+
+                    return time2 - time1;
+                })
+            })
+        });
 
         const loadChats = async () => {
             try {
