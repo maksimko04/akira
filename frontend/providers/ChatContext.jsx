@@ -7,6 +7,10 @@ import { useRef } from "react";
 import ScrollToElementWithLock from "../shared/ScrollToElementWithLock";
 import typesChat from "../constants/typesChat";
 import ChatApi from "../api/ChatApi";
+import useMe from "../hooks/useMe";
+import { useAuthStore } from "../store/useAuthStore";
+import UserApi from "../api/UserApi";
+import { useRouter } from "next/navigation"
 
 const ChatContext = createContext(null);
 
@@ -21,6 +25,9 @@ export const ChatProvider = ({ children }) => {
     const messageBlockRef = useRef(null);
     const [focusedMessage, setFocusedMessage] = useState(null);
     const [chats, setChats] = useState([]);
+    const logoutFromStore = useAuthStore(state => state.logout);
+
+    const router = useRouter();
 
     const openChat = async (chat) => {
         if (chat.uncreated) {
@@ -218,6 +225,12 @@ export const ChatProvider = ({ children }) => {
         })
     }, [focusedMessage]);
 
+    const logout = async () => {
+        const response = await UserApi.logout();
+        router.replace("/login");
+        logoutFromStore();
+    }
+
     return (
         <ChatContext.Provider value={{
             messages,
@@ -234,7 +247,8 @@ export const ChatProvider = ({ children }) => {
             focusOnMessage,
             messageBlockRef,
             chats,
-            setChats
+            setChats,
+            logout
         }}>
             {children}
         </ChatContext.Provider>

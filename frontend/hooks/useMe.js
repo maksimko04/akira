@@ -25,5 +25,5 @@ export default () => {
         }
     }, []);
 
-    return [user, loading];
+    return [user, loading, setUser];
 }

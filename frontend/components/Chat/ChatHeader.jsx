@@ -10,7 +10,7 @@ import UserApi from "../../api/UserApi";
 import memberRoles from "../../constants/memberRoles";
 import ChatApi from "../../api/ChatApi";
 import responseStatuses from "../../constants/responseStatuses";
-import ContextMenu from "../Message/ContextMenu";
+import ContextMenu from "@/components/general/ContextMenu.jsx";
 
 const actions = [
     {

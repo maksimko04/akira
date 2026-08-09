@@ -6,7 +6,7 @@ import styles from "./messagesBlock.module.scss";
 import MessageApi from "../../api/MessageApi";
 import GetFormatDate from "../../shared/GetFormatDate";
 import SpecialMessage from "./SpecialMessage";
-import ContextMenu from "./ContextMenu.jsx";
+import ContextMenu from "@/components/general/ContextMenu.jsx";
 import messageActions from "../../constants/messageActions.js";
 
 const contextMenuActions = [

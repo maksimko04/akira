@@ -9,7 +9,6 @@ import { useChat } from "../../providers/ChatContext";
 import MessagesBlock from "../Message/MessagesBlock";
 import ChatHeader from "./ChatHeader";
 import { useState } from "react";
-import ContextMenuMessage from "../Message/ContextMenu.jsx";
 import ChatApi from "../../api/ChatApi";
 import typesChat from "../../constants/typesChat";
 import { useEffect } from "react";
