@@ -51,7 +51,7 @@ export default () => {
             </div>
         </div>
         {
-            menuIsOpen && <GeneralMenu ref={menuRef} />
+            menuIsOpen && <GeneralMenu setMenuIsOpen={setMenuIsOpen} ref={menuRef} />
         }
         {searchText ?
             <>

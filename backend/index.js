@@ -15,6 +15,7 @@ import http from "http";
 import { Server as SocketServer } from "socket.io";
 import SocketChat from "./sockets/SocketChat.js";
 import SocketAuth from "./sockets/SocketAuth.js";
+import { initMinio } from "./config/minio.js";
 
 const PORT = process.env.PORT;
 const app = express();
@@ -55,6 +56,7 @@ io.on("connection", socket => {
 
 async function startApp() {
     try {
+        await initMinio();
         await mongoose.connect(DB_URL);
         server.listen(PORT, () => {
             console.log("Server is running on port " + PORT);

@@ -24,6 +24,10 @@ class UserApi {
     async globalSearch(searchText){
         return await api.get(`/user/global?searchText=${searchText}`);
     }
+
+    async editMe(data){
+        return await api.put("/user/me", data);
+    }
 }
 
 export default new UserApi();

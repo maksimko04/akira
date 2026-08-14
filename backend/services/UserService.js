@@ -4,6 +4,8 @@ import jwtService from "./JWTService.js";
 import ApiError from "../models/ApiError.js";
 import ChatTypes from "../models/ChatTypes.js";
 import mongoose from "mongoose";
+import MinioService from "./MinioService.js";
+import { v4 as uuidv4 } from 'uuid';
 
 const PROTECTED_IDENTITY_FIELDS = ["email", "password"];
 const UNIQUE_IDENTITY_FIELDS = ["email", "username"];
@@ -78,6 +80,16 @@ class UserService {
                 const salt = await bcrypt.genSalt(10);
                 user[key] = await bcrypt.hash(updatedInfo[key], salt);
             }
+            else if (key === "avatar") {
+                const imageName = `${uuidv4()}.webp`;
+                await MinioService.saveImage(updatedInfo.avatar, imageName);
+
+                if (user.avatar) {
+                    await MinioService.deleteImage(user.avatar);
+                }
+
+                user.avatar = imageName;
+            }
             else {
                 user[key] = updatedInfo[key];
             }
@@ -141,7 +153,7 @@ class UserService {
 
             {
                 $lookup: {
-                    from: "chats", 
+                    from: "chats",
                     let: { targetUserId: "$_id" },
                     pipeline: [
                         {

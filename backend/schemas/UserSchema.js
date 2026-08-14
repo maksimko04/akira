@@ -20,6 +20,11 @@ const User = new mongoose.Schema({
         required: true,
         trim: true
     },
+    avatar: {
+        type: String,
+        default: "",
+        trim: true
+    },
     role: {
         type: String,
         enum: Object.values(Roles),

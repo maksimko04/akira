@@ -9,6 +9,7 @@ import responseService from "../services/ResponseService.js";
 import { idPathValidator, searchText } from "../validation/GeneralValidator.js";
 import UserService from "../services/UserService.js";
 import CheckAuthorization from "../middleware/CheckAuthorization.js";
+import { uploadAvatarMiddleware } from "../middleware/Upload.js";
 
 const router = new Router();
 
@@ -98,14 +99,17 @@ router.delete("/:id",
 
 
 router.put("/me",
+    uploadAvatarMiddleware,
     checkRoleMiddleware(Roles.ADMIN, Roles.USER),
     usernameValidator(true),
     passwordValidator(true),
+    passwordValidator(true, "oldPassword"),
     nameValidator(true),
     emailValidator(true),
     validator,
     catchAsync(async (req, res, next) => {
         const { oldPassword, ...updatedInfo } = req.body;
+        updatedInfo.avatar = req.file?.buffer;
         const user = await userService.updateOwnUser(req.user.id, oldPassword, updatedInfo);
         responseService.success(res, { user });
     })

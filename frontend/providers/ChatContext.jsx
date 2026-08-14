@@ -11,6 +11,8 @@ import useMe from "../hooks/useMe";
 import { useAuthStore } from "../store/useAuthStore";
 import UserApi from "../api/UserApi";
 import { useRouter } from "next/navigation"
+import Modal from "../components/general/Modal";
+import Shadow from "../components/general/Shadow";
 
 const ChatContext = createContext(null);
 
@@ -26,6 +28,7 @@ export const ChatProvider = ({ children }) => {
     const [focusedMessage, setFocusedMessage] = useState(null);
     const [chats, setChats] = useState([]);
     const logoutFromStore = useAuthStore(state => state.logout);
+    const [activeModal, setActiveModal] = useState(null);
 
     const router = useRouter();
 
@@ -225,6 +228,12 @@ export const ChatProvider = ({ children }) => {
         })
     }, [focusedMessage]);
 
+    useEffect(() => {
+        if (selectedChat) {
+            textMessageRef.current.focus();
+        }
+    }, [selectedChat?._id]);
+
     const logout = async () => {
         const response = await UserApi.logout();
         router.replace("/login");
@@ -248,9 +257,15 @@ export const ChatProvider = ({ children }) => {
             messageBlockRef,
             chats,
             setChats,
-            logout
+            logout,
+            activeModal,
+            setActiveModal
         }}>
             {children}
+            {activeModal && <>
+                <Modal info={activeModal} />
+                <Shadow callback={() => {setActiveModal(null)}} />
+            </>}
         </ChatContext.Provider>
     );
 }

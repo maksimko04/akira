@@ -1,4 +1,4 @@
-import {body, query, param} from "express-validator"
+import { body, query, param } from "express-validator"
 import { createValidator } from "./Validator.js";
 
 export const usernameValidator = (isOptional = false) => createValidator(
@@ -10,8 +10,8 @@ export const usernameValidator = (isOptional = false) => createValidator(
         .matches(/^\S+$/).withMessage("USERNAME_WITH_SPACES")
 );
 
-export const passwordValidator = (isOptional = false) => createValidator(
-    body("password"),
+export const passwordValidator = (isOptional = false, nameProperty = "password") => createValidator(
+    body(nameProperty),
     isOptional,
     (chain) => chain
         .exists().withMessage("PASSWORD_IS_REQUIRED")
