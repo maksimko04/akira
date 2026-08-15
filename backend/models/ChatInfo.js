@@ -1,3 +1,8 @@
 export default Object.freeze({
-    title: String
+    title: String,
+    avatar: {
+        type: String,
+        default: "",
+        trim: true
+    },
 });

@@ -20,8 +20,8 @@ router.get("/global",
     searchText(),
     validator,
     catchAsync(async (req, res, next) => {
-        const { searchText } = req.query;
-        const users = await UserService.findUsers(req.user.id, searchText);
+        const { searchText, limit, excludeMembers, excludeExistingChats } = req.query;
+        const users = await UserService.findUsers(req.user.id, searchText, limit, excludeMembers, excludeExistingChats);
         responseService.success(res, { users });
     }));
 

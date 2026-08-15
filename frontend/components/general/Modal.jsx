@@ -1,11 +1,15 @@
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import styles from "./modal.module.scss"
-import ImagePicker from "./ImagePicker";
+import Avatar from "./Avatar";
+import UserApi from "../../api/UserApi";
+import { avatarsStorage } from "../../constants/fileBackets";
+import UserSearch from "../UserSearch/UserSearch";
 
 export default (props) => {
     const { info } = props;
 
     const formRef = useRef(null);
+    const usersRef = useRef(null);
 
     const onSubmit = e => {
         e.preventDefault();
@@ -13,6 +17,11 @@ export default (props) => {
         const formData = new FormData(e.currentTarget);
 
         const data = Object.fromEntries(formData.entries());
+        
+        if(usersRef.current){
+            formData.append(info.nameUsers, JSON.stringify(usersRef.current));
+            data[info.nameUsers] = usersRef.current;
+        }
 
         info.callback(data, formData);
     }
@@ -24,8 +33,14 @@ export default (props) => {
                     {componentInfo.inside.map((InsideComponentInfo, index) => getComponent(InsideComponentInfo, index))}
                 </div>
             );
+            case "vertical-combined": return (
+                <div key={index} className={styles.vertical__combined__component}>
+                    {componentInfo.inside.map((InsideComponentInfo, index) => getComponent(InsideComponentInfo, index))}
+                </div>
+            );
             case "file": return (
-                <ImagePicker key={index} additionalInfo={componentInfo.additionalInfo} defaultImage={componentInfo.defaultImage} name={componentInfo.name}/>
+                <Avatar key={index} additionalInfo={componentInfo.additionalInfo} height={componentInfo.height}
+                    defaultImage={componentInfo.defaultImage} name={componentInfo.name} />
             );
             case "input": return (
                 <div key={index} className={styles.input__container}>
@@ -45,6 +60,7 @@ export default (props) => {
                     </select>
                 </div>
             );
+            case "finder-user": return (<UserSearch userRef={usersRef} key={index}/>);
         }
     }
 

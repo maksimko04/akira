@@ -1,5 +1,6 @@
 import { Client } from 'minio';
 import sharp from 'sharp';
+import { v4 as uuidv4 } from 'uuid';
 
 class MinioService {
     constructor() {
@@ -10,21 +11,20 @@ class MinioService {
             accessKey: process.env.MINIO_ACCESS_KEY,
             secretKey: process.env.MINIO_SECRET_KEY,
         });
-
-        this.bucketName = process.env.MINIO_BUCKET || 'avatars';
     }
 
     /**
      * Завантажує буфер файлу в MinIO і повертає готовий URL
      */
-    async saveImage(buffer, fileName, mimetype = 'image/webp') {
+    async saveImage(buffer, bucketName, mimetype = 'image/webp') {
+        const fileName = `${uuidv4()}.webp`;
         const processedBuffer = await sharp(buffer)
             .resize(300, 300, { fit: "cover" })
             .webp({ quality: 80 })
             .toBuffer();
 
         await this.client.putObject(
-            this.bucketName,
+            bucketName,
             fileName,
             processedBuffer,
             processedBuffer.length,
@@ -32,20 +32,20 @@ class MinioService {
         );
 
         const host = process.env.MINIO_PUBLIC_HOST || 'http://localhost:9000';
-        return `${host}/${this.bucketName}/${fileName}`;
+        return fileName;
     }
 
     /**
      * Видаляє файл із MinIO (наприклад, стару аватарку)
      */
-    async deleteImage(fileUrlOrName) {
+    async deleteImage(fileUrlOrName, bucketName) {
         if (!fileUrlOrName) return;
 
         // Якщо передали повний URL (http://.../avatar.webp), витягуємо тільки 'avatar.webp'
         const fileName = fileUrlOrName.split('/').pop();
 
         try {
-            await this.client.removeObject(this.bucketName, fileName);
+            await this.client.removeObject(bucketName, fileName);
         } catch (error) {
             // console.error(`Помилка видалення файлу ${fileName} з MinIO:`, error);
         }

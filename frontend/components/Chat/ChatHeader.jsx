@@ -11,6 +11,8 @@ import memberRoles from "../../constants/memberRoles";
 import ChatApi from "../../api/ChatApi";
 import responseStatuses from "../../constants/responseStatuses";
 import ContextMenu from "@/components/general/ContextMenu.jsx";
+import { Bars } from "@gravity-ui/icons"
+import { Icon } from '@gravity-ui/uikit';
 
 const actions = [
     {
@@ -100,7 +102,7 @@ export default () => {
             <p className={styles.title}>{selectedChat.title}</p>
             <p className={styles.additional__info}>{additionalInfo}</p>
         </div>
-        <button onClick={switchContextMenu} className={styles.menu__button}>menu</button>
+        <button onClick={switchContextMenu} className={styles.menu__button}><Icon data={Bars} className="hover__icon" /></button>
         {infoContextMenu && <ContextMenu actions={actions} className={styles.context__menu__pos} info={infoContextMenu} />}
     </header>);
 }

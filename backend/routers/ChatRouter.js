@@ -9,6 +9,7 @@ import CheckAuthorization from "../middleware/CheckAuthorization.js";
 import ChatService from "../services/ChatService.js";
 import { paginationValidator, idPathValidator, arrayOfIdValidator, idBodyValidator, searchText } from "../validation/GeneralValidator.js";
 import { chatTypeValidator, memberRightsValidator, memberRoleValidator, membersValidator, titleValidator } from "../validation/ChatValidator.js";
+import { uploadAvatarMiddleware } from "../middleware/Upload.js";
 
 const router = new Router();
 
@@ -25,12 +26,16 @@ router.get("/", CheckAuthorization,
     })
 );
 
-router.post("/create", CheckAuthorization,
+router.post("/create", 
+    uploadAvatarMiddleware,
+    CheckAuthorization,
     titleValidator(true),
     membersValidator(),
     chatTypeValidator(),
     validator,
     catchAsync(async (req, res, next) => {
+        const chatInfo = req.body;
+        chatInfo.avatar = req.file?.buffer;
         const chat = await ChatService.create(req.user.id, req.body);
 
         const io = req.app.get("io");

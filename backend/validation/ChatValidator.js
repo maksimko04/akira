@@ -26,6 +26,16 @@ export const membersValidator = (isOptional = false) => [
         body("members"),
         isOptional,
         (chain) => chain
+            .customSanitizer((value) => {
+                if (value === undefined || value === null) return value;
+                if (Array.isArray(value)) return value;
+
+                try {
+                    return JSON.parse(value);
+                } catch {
+                    return value; 
+                }
+            })
             .isArray().withMessage("NO_MEMBERS")
     ),
     createValidator(

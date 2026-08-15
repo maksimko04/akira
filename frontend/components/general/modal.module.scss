@@ -2,7 +2,6 @@
     position: absolute;
     top: 50%;
     left: 50%;
-    min-width: max-content;
     display: flex;
     flex-direction: column;
     gap: 15px;
@@ -20,6 +19,19 @@
     border: var(--border-color) 1px solid;
     border-radius: var(--border-radius);
     padding: 10px;
+
+    &:not(:has(img)) {
+        label {
+            text-align: center;
+            display: block;
+        }
+    }
+}
+
+.vertical__combined__component {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
 .container input {
@@ -44,4 +56,13 @@
 .form__title {
     font-size: 24px;
     align-self: center;
+}
+
+.container input {
+    border: var(--border-color) 2px solid;
+    border-radius: var(--border-radius);
+    margin-top: 5px;
+    background-color: var(--vidget-color3);
+    padding: 5px;
+    padding-left: 10px;
 }

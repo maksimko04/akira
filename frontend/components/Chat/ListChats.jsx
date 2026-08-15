@@ -5,9 +5,10 @@ import ChatApi from "../../api/ChatApi";
 import Image from "next/image";
 
 import styles from "./listChats.module.scss"
-import sunIcon from "@/assets/icons/sun.png";
 import { useChat } from "../../providers/ChatContext";
 import UserApi from "../../api/UserApi";
+import Avatar from "../general/Avatar";
+import { groupAvatarsStorage } from "../../constants/fileBackets";
 
 export default (props) => {
     const { search, type } = props;
@@ -72,7 +73,8 @@ export default (props) => {
                 <button onClick={() => openChat(type === "global" ? {uncreated: true, name: chat.name, userId: chat._id} : chat)}
                     className={`${styles.chat} ${selectedChat && chat._id === selectedChat._id && styles.selected__chat}`}
                     key={chat._id}>
-                    <Image src={sunIcon} alt="sun" />
+                    <Avatar onlyView={true} defaultImage={chat.avatar && groupAvatarsStorage + chat.avatar} 
+                    additionalInfo={chat.title} fontSize="36px" />
                     <div className={styles.text__info}>
                         <p>{getChatInfo(chat, "title")}</p>
                         <p className={styles.additional__info}>{getChatInfo(chat, "additinalInfo")}</p>

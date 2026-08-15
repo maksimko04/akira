@@ -1,6 +1,6 @@
 import * as Minio from 'minio';
 
-export const BUCKET_NAME = 'avatars';
+export const BUCKET_NAMES = ["avatars", "group-avatars"];
 
 export const minioClient = new Minio.Client({
   endPoint: process.env.MINIO_ENDPOINT || 'localhost',
@@ -12,26 +12,29 @@ export const minioClient = new Minio.Client({
 
 export const initMinio = async () => {
   try {
-    const exists = await minioClient.bucketExists(BUCKET_NAME);
-    if (!exists) {
-      await minioClient.makeBucket(BUCKET_NAME);
-      console.log(`[MinIO] Бакет "${BUCKET_NAME}" успішно створено.`);
+    for (const bucketName of BUCKET_NAMES) {
+      const exists = await minioClient.bucketExists(bucketName);
+      if (!exists) {
+        await minioClient.makeBucket(bucketName);
+        console.log(`[MinIO] Бакет "${bucketName}" успішно створено.`);
 
-      // Політика для публічного читання (щоб <img src="..."> працював без токенів)
-      const policy = {
-        Version: "2012-10-17",
-        Statement: [
-          {
-            Effect: "Allow",
-            Principal: { AWS: ["*"] },
-            Action: ["s3:GetObject"],
-            Resource: [`arn:aws:s3:::${BUCKET_NAME}/*`],
-          },
-        ],
-      };
+        // Політика для публічного читання (щоб <img src="..."> працював без токенів)
 
-      await minioClient.setBucketPolicy(BUCKET_NAME, JSON.stringify(policy));
-      console.log(`[MinIO] Публічну політику для "${BUCKET_NAME}" виставлено.`);
+        await minioClient.setBucketPolicy(bucketName, JSON.stringify(policy));
+        console.log(`[MinIO] Публічну політику для "${bucketName}" виставлено.`);
+        const policy = {
+          Version: "2012-10-17",
+          Statement: [
+            {
+              Effect: "Allow",
+              Principal: { AWS: ["*"] },
+              Action: ["s3:GetObject"],
+              Resource: [`arn:aws:s3:::${bucketName}/*`],
+            },
+          ],
+        };
+        await minioClient.setBucketPolicy(bucketName, JSON.stringify(policy));
+      }
     }
   } catch (err) {
     console.error('[MinIO] Помилка ініціалізації:', err);

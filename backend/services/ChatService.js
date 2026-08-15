@@ -8,9 +8,11 @@ import ChatTypes from "../models/ChatTypes.js";
 import UserService from "./UserService.js";
 import mongoose from "mongoose";
 import MessagesService from "./MessagesService.js";
+import MinioService from "./MinioService.js";
 
 //ARRAY CHAT INFO
-const chatInfoArray = Object.keys(chatInfo)
+const chatInfoArray = Object.keys(chatInfo);
+const notRequiredChatInfo = ["avatar"];
 
 //STRENGTH OF ROLES
 const memberRolesArray = [MemberRoles.MEMBER, MemberRoles.ADMIN, MemberRoles.OWNER];
@@ -219,8 +221,19 @@ class ChatService {
 
     async createGroup(userId, chatConfiguration) {
         for (const field of chatInfoArray) {
-            if (!chatConfiguration[field]) {
+            if (!chatConfiguration[field] && !notRequiredChatInfo.includes(field)) {
                 throw ApiError.badRequest(`${field.toUpperCase()}_IS_REQUIRED`);
+            }
+        }
+
+        if(chatConfiguration.avatar){
+            try{
+                const imageName = await MinioService.saveImage(chatConfiguration.avatar, "group-avatars");
+
+                chatConfiguration.avatar = imageName;
+            }
+            catch(err){
+                delete chatConfiguration.avatar;
             }
         }
 
@@ -233,6 +246,10 @@ class ChatService {
         for (const memberId of chatConfiguration.members) {
             if (!await UserService.getUser(memberId)) {
                 throw ApiError.badRequest("USER_NOT_EXISTS");
+            }
+
+            if(membersInDatabase.find(member => member.user === memberId)){
+                throw ApiError.badRequest();
             }
 
             membersInDatabase.push({
@@ -249,8 +266,19 @@ class ChatService {
 
     async createChannel(userId, chatConfiguration) {
         for (const field of chatInfoArray) {
-            if (!chatConfiguration[field]) {
+            if (!chatConfiguration[field] && !notRequiredChatInfo.includes(field)) {
                 throw ApiError.badRequest(`${field.toUpperCase()}_IS_REQUIRED`);
+            }
+        }
+
+        if(chatConfiguration.avatar){
+            try{
+                const imageName = await MinioService.saveImage(chatConfiguration.avatar, "group-avatars");
+
+                chatConfiguration.avatar = imageName;
+            }
+            catch{
+                delete chatConfiguration.avatar;
             }
         }
 

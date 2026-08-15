@@ -21,8 +21,16 @@ class UserApi {
         return await api.delete("/user/logout");
     }
 
-    async globalSearch(searchText){
-        return await api.get(`/user/global?searchText=${searchText}`);
+    async globalSearch(searchText, limit, excludeMembers, excludeExistingChats){
+        return await api.get(`/user/global`, {
+            params: {
+                searchText,
+                limit,
+                excludeMembers,
+                excludeExistingChats
+            },
+            paramsSerializer: { indexes: null }
+        });
     }
 
     async editMe(data){

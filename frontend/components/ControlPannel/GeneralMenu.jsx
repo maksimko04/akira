@@ -7,46 +7,66 @@ import ChatApi from "../../api/ChatApi";
 import typesChat from "../../constants/typesChat";
 import { useToast } from "@/providers/toastProvider";
 import typesToast from "@/constants/typesToast";
-import { emailRegex, nameRegex, usernameRegex } from "../../constants/regexes";
+import { emailRegex, groupTitleRegex, nameRegex, usernameRegex } from "../../constants/regexes";
 import serverResponses from "../../constants/serverResponses";
+import { avatarsStorage } from "../../constants/fileBackets";
 
-const modalCreateChat = (setActiveModal) => ({
+const modalCreateChat = (setActiveModal, createToast) => ({
     submitText: "Create",
 
     title: "Create Chat",
+    width: "600px",
+    nameUsers: "members",
 
-    content: [{
-        type: "input",
-        name: "Group title",
-        key: "title",
-        maxLength: 25,
-    },
-    {
-        type: "select",
-        name: "Type of Group",
-        key: "type",
-        options: [{
-            value: typesChat.GROUP,
-            text: "Group"
+    content: [
+        {
+            type: "combined",
+            inside: [
+                {
+                    type: "file",
+                    name: "avatar",
+                    height: "150px",
+                },
+                {
+                    type: "input",
+                    name: "Group title",
+                    key: "title",
+                    maxLength: 25,
+                },
+            ]
         },
         {
-            value: typesChat.CHANNEL,
-            text: "Channel"
-        }]
-    }],
+            type: "select",
+            name: "Type of Group",
+            key: "type",
+            options: [{
+                value: typesChat.GROUP,
+                text: "Group"
+            },
+            {
+                value: typesChat.CHANNEL,
+                text: "Channel"
+            }]
+        },
+        {
+            type: "finder-user",
+            name: "Add User"
+        }
+    ],
 
-    callback: async (data) => {
+    callback: async (data, formData) => {
         try {
-            await ChatApi.createChat({ ...data, members: [] });
+            if(!groupTitleRegex.test(data.title)){
+                createToast(typesToast.warning, "Incorrect format title");
+                return;
+            }
+
+            await ChatApi.createChat(formData);
             setActiveModal(null);
         }
-        catch (err) {
-
-        }
+        catch (err) {}
     }
 });
-
-const avatarsStorage = `${process.env.NEXT_PUBLIC_MINIO_PUBLIC_HOST}/avatars/`;
 
 const modalMyAccount = async (setActiveModal, createToast) => {
     let user;
@@ -64,8 +84,8 @@ const modalMyAccount = async (setActiveModal, createToast) => {
     return {
         submitText: "Edit Info",
 
-        width: "400px",
-        title: "My Accout",
+        width: "550px",
+        title: "My Account",
 
         content: [
             {
@@ -74,15 +94,27 @@ const modalMyAccount = async (setActiveModal, createToast) => {
                     {
                         type: "file",
                         name: "avatar",
+                        height: "150px",
                         defaultImage: (user.avatar ? avatarsStorage + user.avatar : null),
                         additionalInfo: user.name,
                     },
                     {
-                        type: "input",
-                        name: "Name",
-                        key: "name",
-                        placeholder: user.name,
-                    },
+                        type: "vertical-combined",
+                        inside: [
+                            {
+                                type: "input",
+                                name: "Name",
+                                key: "name",
+                                placeholder: user.name,
+                            },
+                            {
+                                type: "input",
+                                name: "Username",
+                                key: "username",
+                                placeholder: user.username,
+                            },
+                        ]
+                    }
                 ]
             },
             {
@@ -90,12 +122,6 @@ const modalMyAccount = async (setActiveModal, createToast) => {
                 name: "Email",
                 key: "email",
                 placeholder: user.email,
-            },
-            {
-                type: "input",
-                name: "Username",
-                key: "username",
-                placeholder: user.username,
             },
             {
                 type: "combined",
@@ -177,8 +203,8 @@ const actions = [
     },
     {
         text: "New Chat",
-        action: ({ setMenuIsOpen, setActiveModal }) => {
-            setActiveModal(modalCreateChat(setActiveModal));
+        action: ({ setMenuIsOpen, setActiveModal, createToast }) => {
+            setActiveModal(modalCreateChat(setActiveModal, createToast));
             setMenuIsOpen(null);
         }
     },

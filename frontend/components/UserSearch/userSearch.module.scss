@@ -1,0 +1,75 @@
+
+.adding__user__container {
+    position: relative;
+    width: 100%;
+}
+
+.adding__user__info {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    align-items: start;
+}
+
+.count__members {
+    color: var(--text-muted);
+    font-size: 14px;
+    gap: 5px;
+}
+
+.list__members {
+    margin-top: 10px;
+    height: 150px;
+    width: 100%;
+    background-color: var(--vidget-color3);
+    border-radius: var(--border-radius);
+    overflow-y: auto;
+    border: var(--border-color) 2px solid;
+    
+    display: flex;
+    flex-wrap: wrap;
+
+    align-content: flex-start;   
+    gap: 5px;                  
+    padding: 5px;               
+    box-sizing: border-box;      
+}
+
+.list__suggested__users {
+    position: absolute;
+    width: 55%;
+    background-color: var(--vidget-color3);
+    border: var(--border-color) 2px solid;
+    border-radius: var(--border-radius);
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 5px;
+}
+
+.list__suggested__users .suggested__user {
+    background-color: var(--vidget-color2);
+    height: 60px;
+    width: 100%;
+    display: flex;
+    justify-content: start;
+    padding: 2px;
+    padding-left: 10px;
+    align-content: flex-start;
+}
+
+.text__suggested__user__info {
+    text-align: left;
+}
+
+.selected__member {
+    display: flex;
+    gap: 5px;
+    height: 30px;
+    align-items: center;
+    width: min-content;
+    padding-right: 10px;
+    padding-left: 3px;
+    background-color: var(--vidget-color2);
+    border-radius: var(--border-radius);
+}

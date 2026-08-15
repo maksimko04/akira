@@ -18,15 +18,18 @@
     color: gray;
 }
 
-.menu__button {
-    margin-left: auto;
-    margin-right: 20px;
-    aspect-ratio: 1 / 1;
-}
-
 .context__menu__pos {
     position: absolute !important;
     right: 10px !important;
     left: auto;
     top: calc(var(--header-height) - 5px) !important;
+}
+
+.menu__button {
+    margin-left: auto;
+    margin-right: 20px;
+    aspect-ratio: 1 / 1;
+    height: 60%;
+    background: transparent;
+    padding: 0;
 }

@@ -218,6 +218,7 @@ input[type="checkbox"] {
 }
 
 @keyframes animation__focus_on {
+
   0%,
   100% {
     background-color: var(--own-color);
@@ -271,4 +272,29 @@ option {
 option:checked {
   background-color: var(--primary-color);
   color: #ffffff;
+}
+
+.hover__icon {
+  height: var(--height, 100%) !important;
+  width: auto !important;
+  aspect-ratio: 1 !important;
+  align-self: center;
+  background-color: transparent;
+  color: var(--text-muted);
+  flex-shrink: 0;
+
+  & svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  &:hover {
+    color: var(--text-color);
+  }
+}
+
+.button__wrapper {
+  background: transparent !important;
+  width: min-content !important;
+  height: min-content !important;
 }

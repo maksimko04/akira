@@ -5,7 +5,6 @@ import ApiError from "../models/ApiError.js";
 import ChatTypes from "../models/ChatTypes.js";
 import mongoose from "mongoose";
 import MinioService from "./MinioService.js";
-import { v4 as uuidv4 } from 'uuid';
 
 const PROTECTED_IDENTITY_FIELDS = ["email", "password"];
 const UNIQUE_IDENTITY_FIELDS = ["email", "username"];
@@ -81,14 +80,16 @@ class UserService {
                 user[key] = await bcrypt.hash(updatedInfo[key], salt);
             }
             else if (key === "avatar") {
-                const imageName = `${uuidv4()}.webp`;
-                await MinioService.saveImage(updatedInfo.avatar, imageName);
+                try {
+                    const imageName = await MinioService.saveImage(updatedInfo.avatar, "avatars");
 
-                if (user.avatar) {
-                    await MinioService.deleteImage(user.avatar);
+                    if (user.avatar) {
+                        await MinioService.deleteImage(user.avatar, "avatars");
+                    }
+
+                    user.avatar = imageName;
                 }
-
-                user.avatar = imageName;
+                catch { }
             }
             else {
                 user[key] = updatedInfo[key];
@@ -140,56 +141,67 @@ class UserService {
         return user;
     }
 
-    async findUsers(userId, usernameSearch) {
+    async findUsers(userId, usernameSearch, limit, excludeMembers, excludeExistingChats) {
+        limit = Number(limit) || 6;
         const userObjectId = new mongoose.Types.ObjectId(userId);
+        excludeMembers = Array.isArray(excludeMembers) ? excludeMembers : (
+            excludeMembers ? [excludeMembers] : []
+        );
 
-        const users = await User.aggregate([
-            {
-                $match: {
-                    _id: { $ne: userObjectId },
-                    username: { $regex: usernameSearch, $options: "i" },
-                }
-            },
+        const excludeMembersObjectId = excludeMembers.map(id => new mongoose.Types.ObjectId(id));
 
-            {
-                $lookup: {
-                    from: "chats",
-                    let: { targetUserId: "$_id" },
-                    pipeline: [
-                        {
-                            $match: {
-                                $expr: {
-                                    $and: [
-                                        { $eq: ["$type", ChatTypes.PRIVATE] },
-                                        { $in: [userObjectId, "$members.user"] },
-                                        { $in: ["$$targetUserId", "$members.user"] }
-                                    ]
-                                }
+        const excludingExistingChats = [{
+            $lookup: {
+                from: "chats",
+                let: { targetUserId: "$_id" },
+                pipeline: [
+                    {
+                        $match: {
+                            $expr: {
+                                $and: [
+                                    { $eq: ["$type", ChatTypes.PRIVATE] },
+                                    { $in: [userObjectId, "$members.user"] },
+                                    { $in: ["$$targetUserId", "$members.user"] }
+                                ]
                             }
                         }
-                    ],
-                    as: "existingChat"
-                }
-            },
-
-            {
-                $match: {
-                    existingChat: { $size: 0 }
-                }
-            },
-
-            {
-                $limit: 10
-            },
-
-            {
-                $project: {
-                    password: 0,
-                    existingChat: 0,
-                    __v: 0
-                }
+                    }
+                ],
+                as: "existingChat"
             }
-        ]);
+        },
+
+        {
+            $match: {
+                existingChat: { $size: 0 }
+            }
+        },]
+
+
+        let pipeline = [{
+            $match: {
+                _id: { $nin: [userObjectId, ...excludeMembersObjectId] },
+                username: { $regex: usernameSearch, $options: "i" },
+            }
+        },];
+
+        if(!excludeExistingChats){
+            pipeline = [...pipeline, ...excludingExistingChats];
+        }
+
+        pipeline = [...pipeline, {
+            $limit: limit
+        },
+
+        {
+            $project: {
+                password: 0,
+                existingChat: 0,
+                __v: 0
+            }
+        }]
+
+        const users = await User.aggregate(pipeline);
 
         return users;
     }
