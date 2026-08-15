@@ -165,25 +165,25 @@ class MessagesService {
             throw ApiError.internal();
         }
 
-        const member = await ChatService.findMember(userId);
+        const member = await ChatService.findMember(chat, userId);
 
         if (!member) {
             throw ApiError.forbidden();
         }
 
-        if (message.author.toString() === userId.toString()) {
-            if (!ChatService.checkRight(MemberRights.MEMBER.DELETE_OWN_MESSAGES)) {
+        if (message.author._id.toString() === userId) {
+            if (!ChatService.checkRight(member, MemberRights.MEMBER.DELETE_OWN_MESSAGES)) {
                 throw ApiError.forbidden();
             }
 
-            await Message.findByIdAndDelete(messageId);
+            return await Message.findByIdAndDelete(messageId);
         }
         else {
-            if (!ChatService.checkRight(MemberRights.ADMIN.DELETE_MESSAGES)) {
+            if (!ChatService.checkRight(member, MemberRights.ADMIN.DELETE_MESSAGES)) {
                 throw ApiError.forbidden();
             }
 
-            await Message.findByIdAndDelete(messageId);
+            return await Message.findByIdAndDelete(messageId);
         }
     }
 

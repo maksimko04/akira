@@ -13,6 +13,7 @@ import ChatApi from "../../api/ChatApi";
 import typesChat from "../../constants/typesChat";
 import { useEffect } from "react";
 import { useRef } from "react";
+import { checkRight, rights } from "../../shared/ChatRights";
 
 export default (props) => {
     const [user, isLoading] = useMe();
@@ -60,19 +61,21 @@ export default (props) => {
                 <>
                     <ChatHeader />
                     <MessagesBlock />
-                    <form onSubmit={onSubmit} className={styles.sending__area}>
-                        <div className={styles.writing__area}>
-                            {targetMessage &&
-                                <div className={styles.action__description}>
-                                    <p className={styles.action__title}>{targetMessage.description}</p>
-                                    <p className={styles.action__message__text}>{targetMessage.text}</p>
-                                </div>}
-                            <input ref={textMessageRef} />
-                        </div>
-                        <button className={styles.button__send}>
-                            <Image src={sendIcon} alt="sent" />
-                        </button>
-                    </form>
+                    {checkRight(selectedChat.myMember, rights.MEMBER.SEND_MESSAGES) &&
+                        <form onSubmit={onSubmit} className={styles.sending__area}>
+                            <div className={styles.writing__area}>
+                                {targetMessage &&
+                                    <div className={styles.action__description}>
+                                        <p className={styles.action__title}>{targetMessage.description}</p>
+                                        <p className={styles.action__message__text}>{targetMessage.text}</p>
+                                    </div>}
+                                <input ref={textMessageRef} />
+                            </div>
+                            <button className={styles.button__send}>
+                                <Image src={sendIcon} alt="sent" />
+                            </button>
+                        </form>
+                    }
                 </>
                 :
                 <div className={styles.no__chat__info}>

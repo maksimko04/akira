@@ -28,6 +28,10 @@ class MessageApi {
             chatId, text
         });
     }
+
+    async deleteMessage(messageId){
+        return await api.delete(`/message/${messageId}`)
+    }
 }
 
 export default new MessageApi();

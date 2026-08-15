@@ -57,7 +57,6 @@ class ChatService {
             }
         }
 
-
         return member;
     }
 

@@ -13,6 +13,7 @@ import UserApi from "../api/UserApi";
 import { useRouter } from "next/navigation"
 import Modal from "../components/general/Modal";
 import Shadow from "../components/general/Shadow";
+import { checkRight, rights } from "../shared/ChatRights";
 
 const ChatContext = createContext(null);
 
@@ -30,7 +31,17 @@ export const ChatProvider = ({ children }) => {
     const logoutFromStore = useAuthStore(state => state.logout);
     const [activeModal, setActiveModal] = useState(null);
 
+    const [me, loading] = useMe();
+
     const router = useRouter();
+
+    const getMyMember = (chat) => {
+        for (const member of chat.members) {
+            if (member.user === me) {
+                return member;
+            }
+        }
+    }
 
     const openChat = async (chat) => {
         if (chat.uncreated) {
@@ -44,7 +55,8 @@ export const ChatProvider = ({ children }) => {
             socket.emit("open_uncreated_chat", { userId: chat.userId }, (data) => {
                 socket.on("uncreated_chat_created", async (chat) => {
                     try {
-                        setSelectedChat(chat);
+                        const myMember = getMyMember(chat);
+                        setSelectedChat({ ...chat, myMember });
                         setChats(prev => [chat, ...prev]);
                         const response = await MessageApi.getMessages(chat._id);
                         setMessages(response.data.messages);
@@ -61,7 +73,8 @@ export const ChatProvider = ({ children }) => {
         try {
             const response = await MessageApi.getMessages(chat._id);
             socket.emit("join_chat", { chatId: chat._id });
-            setSelectedChat(chat);
+            const myMember = getMyMember(chat);
+            setSelectedChat({ ...chat, myMember });
             setMessages(response.data.messages);
             socket.off("uncreated_chat_created");
         }
@@ -182,6 +195,10 @@ export const ChatProvider = ({ children }) => {
             })
         });
 
+        socket.on("message_deleted", ({ messageId }) => {
+            setMessages(prev => prev.filter(message => message._id !== messageId));
+        });
+
         const loadChats = async () => {
             try {
                 const response = await ChatApi.getChats();
@@ -229,7 +246,7 @@ export const ChatProvider = ({ children }) => {
     }, [focusedMessage]);
 
     useEffect(() => {
-        if (selectedChat) {
+        if (selectedChat && checkRight(selectedChat.myMember, rights.MEMBER.SEND_MESSAGES)) {
             textMessageRef.current.focus();
         }
     }, [selectedChat?._id]);
@@ -264,7 +281,7 @@ export const ChatProvider = ({ children }) => {
             {children}
             {activeModal && <>
                 <Modal info={activeModal} />
-                <Shadow callback={() => {setActiveModal(null)}} />
+                <Shadow callback={() => { setActiveModal(null) }} />
             </>}
         </ChatContext.Provider>
     );

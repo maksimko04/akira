@@ -1,5 +1,5 @@
 import ChatService from "../services/ChatService.js";
-import { z } from "zod"
+import { success, z } from "zod"
 import MessagesService from "../services/MessagesService.js";
 import UserService from "../services/UserService.js";
 
@@ -23,6 +23,10 @@ const messageEditSchema = z.object({
 
 const userIdSchema = z.object({
     userId: z.string().regex(mongoIdRegex, "INVALID_ID")
+});
+
+const messageIdSchema = z.object({
+    messageId: z.string().regex(mongoIdRegex, "INVALID_ID")
 });
 
 export default (io, socket) => {
@@ -106,16 +110,37 @@ export default (io, socket) => {
     });
 
     socket.on("created_private_chat", async (data, callback) => {
-        const { userId } = userIdSchema.parse(data);
+        try{
+            const { userId } = userIdSchema.parse(data);
+    
+            const chat = await ChatService.findPrivateChat(socket.user.id, userId);
+    
+            const roomName = `uncreated_chat_${[socket.user.id, userId].sort().join(".")}`;
+    
+            io.to(roomName).except(socket.id).emit("uncreated_chat_created", chat);
+    
+            io.in(roomName).socketsLeave(roomName);
+    
+            callback?.({ success: true });
+        }
+        catch(error){
+            callback?.({success: false, error: error.message});
+        }
+    });
 
-        const chat = await ChatService.findPrivateChat(socket.user.id, userId);
+    socket.on("delete_message", async (data, callback) => {
+        try{
+            const { messageId } = messageIdSchema.parse(data);
 
-        const roomName = `uncreated_chat_${[socket.user.id, userId].sort().join(".")}`;
+            const message = await MessagesService.deleteMessage(socket.user.id, messageId);
 
-        io.to(roomName).except(socket.id).emit("uncreated_chat_created", chat);
+            io.to(`chat_${message.chat.toString()}`).except(socket.id).emit("message_deleted", {messageId});
 
-        io.in(roomName).socketsLeave(roomName);
+            callback?.({success: true});
+        }
+        catch(error){
+            callback?.({success: false, error: error.message});
+        }
 
-        callback?.({ success: true });
     })
 }

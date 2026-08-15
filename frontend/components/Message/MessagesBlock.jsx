@@ -8,12 +8,13 @@ import GetFormatDate from "../../shared/GetFormatDate";
 import SpecialMessage from "./SpecialMessage";
 import ContextMenu from "@/components/general/ContextMenu.jsx";
 import messageActions from "../../constants/messageActions.js";
+import { checkRight, rights } from "../../shared/ChatRights.js";
 
 const contextMenuActions = [
     {
         text: "Edit",
-        hideWhen: (user, {message}) => {
-            return user !== message.author._id;
+        hideWhen: (user, {message, myMember}) => {
+            return user !== message.author._id || !checkRight(myMember, rights.MEMBER.EDIT_OWN_MESSAGES);
         },
 
         action: ({message, setTargetMessage, textMessageRef}) => {
@@ -35,6 +36,9 @@ const contextMenuActions = [
     },
     {
         text: "Reply",
+        hideWhen: (user, {myMember}) => {
+            return !checkRight(myMember, rights.MEMBER.SEND_MESSAGES);
+        },
         action: ({message, setTargetMessage, textMessageRef}) => {
             textMessageRef.current.focus();
             setTargetMessage({
@@ -44,11 +48,27 @@ const contextMenuActions = [
                 text: message.text
             });
         }
-    }
+    },
+    {
+        text: "Delete",
+        hideWhen: (user, {message, myMember}) => {
+            if(message.author._id === user){
+                return !checkRight(myMember, rights.MEMBER.DELETE_OWN_MESSAGES);
+            }
+            return !checkRight(myMember, rights.ADMIN.DELETE_MESSAGES);
+        },
+        action: ({message, setTargetMessage, textMessageRef, socket, setMessages}) => {
+            socket.emit("delete_message", {messageId: message._id}, (response) => {
+                if(response.success){
+                    setMessages(prev => prev.filter(messageInList => messageInList._id !== message._id));
+                }
+            });
+        }
+    },
 ];
 
 export default () => {
-    const { messages, setMessages, selectedChat, messageBlockRef, setTargetMessage, textMessageRef } = useChat();
+    const { messages, setMessages, selectedChat, messageBlockRef, setTargetMessage, textMessageRef, socket } = useChat();
     const [infoContextMenu, setInfoContextMenu] = useState(null);
 
     const topSentinelRef = useRef(null);
@@ -67,7 +87,10 @@ export default () => {
             data: {
                 message,
                 setTargetMessage,
-                textMessageRef
+                textMessageRef,
+                socket,
+                setMessages,
+                myMember: selectedChat.myMember
             }
         });
     }
