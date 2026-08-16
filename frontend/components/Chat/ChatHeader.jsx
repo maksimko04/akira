@@ -37,7 +37,8 @@ const actions = [
     }
 ]
 
-export default () => {
+export default (props) => {
+    const {setIsControlPanelOpen} = props;
     const { chats, setChats, setSelectedChat, selectedChat } = useChat();
 
     const [user, loading] = useMe();
@@ -97,7 +98,7 @@ export default () => {
     }
 
 
-    return (<header className={styles.header}>
+    return (<header onClick={() => setIsControlPanelOpen(prev => !prev)} className={styles.header}>
         <div className={styles.text__info}>
             <p className={styles.title}>{selectedChat.title}</p>
             <p className={styles.additional__info}>{additionalInfo}</p>

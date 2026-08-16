@@ -1,5 +1,5 @@
 const memberRolesArray = ["MEMBER", "ADMIN", "OWNER"];
-const strengthOfRole = {};
+export const strengthOfRole = {};
 memberRolesArray.forEach((role, index) => {
     strengthOfRole[role] = index;
 });

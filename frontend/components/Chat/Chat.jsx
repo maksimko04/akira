@@ -14,10 +14,12 @@ import typesChat from "../../constants/typesChat";
 import { useEffect } from "react";
 import { useRef } from "react";
 import { checkRight, rights } from "../../shared/ChatRights";
+import ChatControlPannel from "./ChatControlPannel";
 
 export default (props) => {
     const [user, isLoading] = useMe();
     const { openChat, selectedChat, setSelectedChat, sendMessage, targetMessage, textMessageRef, socket } = useChat();
+    const [isControlPanelOpen, setIsControlPanelOpen] = useState(false);
     const messageNeedSend = useRef(false);
 
     const onSubmit = async event => {
@@ -59,7 +61,7 @@ export default (props) => {
         {
             selectedChat ?
                 <>
-                    <ChatHeader />
+                    <ChatHeader setIsControlPanelOpen={setIsControlPanelOpen} />
                     <MessagesBlock />
                     {checkRight(selectedChat.myMember, rights.MEMBER.SEND_MESSAGES) &&
                         <form onSubmit={onSubmit} className={styles.sending__area}>
@@ -83,6 +85,8 @@ export default (props) => {
                 </div>
         }
 
-
+        {isControlPanelOpen && 
+            <ChatControlPannel />
+        }
     </div>);
 }

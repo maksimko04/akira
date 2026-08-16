@@ -297,4 +297,5 @@ option:checked {
   background: transparent !important;
   width: min-content !important;
   height: min-content !important;
+  color: var(--text-color);
 }

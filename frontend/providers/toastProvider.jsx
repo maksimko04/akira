@@ -8,7 +8,7 @@ const ToastContext = createContext(null);
 export function ToastProvider({ children }) {
     const [toasts, setToasts] = useState([]);
 
-    const createToast = (type, message, duration = 3000) => {
+    const createToast = (type, message = "something went wrong", duration = 3000) => {
         const id = Date.now() + toasts.length;
         setToasts(preventValue => [...preventValue, {id, type, message}]);
 

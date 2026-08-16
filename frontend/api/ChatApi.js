@@ -13,6 +13,12 @@ class ChatApi {
     async deleteChat(chatId){
         return await api.delete(`/chat/${chatId}`);
     }
+
+    async getMembersDetails(chatId, pagination){
+        return await api.get(`/chat/get-members/${chatId}`, {
+            params: pagination
+        })
+    }
 }
 
 export default new ChatApi();

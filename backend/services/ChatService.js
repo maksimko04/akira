@@ -9,6 +9,7 @@ import UserService from "./UserService.js";
 import mongoose from "mongoose";
 import MessagesService from "./MessagesService.js";
 import MinioService from "./MinioService.js";
+import ChatSchema from "../schemas/ChatSchema.js";
 
 //ARRAY CHAT INFO
 const chatInfoArray = Object.keys(chatInfo);
@@ -157,7 +158,7 @@ class ChatService {
 
         chats = await Promise.all(chats.map(async chat => {
             const message = await MessagesService.getLastMessage(chat._id)
-            if(message){
+            if (message) {
                 chat.lastMessage = message.text;
             }
 
@@ -225,13 +226,13 @@ class ChatService {
             }
         }
 
-        if(chatConfiguration.avatar){
-            try{
+        if (chatConfiguration.avatar) {
+            try {
                 const imageName = await MinioService.saveImage(chatConfiguration.avatar, "group-avatars");
 
                 chatConfiguration.avatar = imageName;
             }
-            catch(err){
+            catch (err) {
                 delete chatConfiguration.avatar;
             }
         }
@@ -247,7 +248,7 @@ class ChatService {
                 throw ApiError.badRequest("USER_NOT_EXISTS");
             }
 
-            if(membersInDatabase.find(member => member.user === memberId)){
+            if (membersInDatabase.find(member => member.user === memberId)) {
                 throw ApiError.badRequest();
             }
 
@@ -270,13 +271,13 @@ class ChatService {
             }
         }
 
-        if(chatConfiguration.avatar){
-            try{
+        if (chatConfiguration.avatar) {
+            try {
                 const imageName = await MinioService.saveImage(chatConfiguration.avatar, "group-avatars");
 
                 chatConfiguration.avatar = imageName;
             }
-            catch{
+            catch {
                 delete chatConfiguration.avatar;
             }
         }
@@ -481,6 +482,42 @@ class ChatService {
 
         chat.members = chat.members.filter(member => member.id != memberId);
         await chat.save();
+    }
+
+    async getMembersDetail(chatId, pagination) {
+        const skip = Number(pagination.skip) || 0;
+        const limit = Number(pagination.limit) || 100;
+        const chaIdObject = new mongoose.Types.ObjectId(chatId);
+
+        const members = await Chat.aggregate([
+            {
+                $match: { _id: chaIdObject }
+            },
+            {
+                $unwind: "$members"
+            },
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "members.user",
+                    foreignField: "_id",
+                    as: "user"
+                }
+            },
+            {
+                $unwind: "$user"
+            },
+            {
+                $project: {
+                    _id: "$user._id",
+                    name: "$user.name",
+                    avatar: "$user.avatar",
+                    username: "$user.username",
+                    role: "$members.role"
+                }
+            }]);
+
+        return members;
     }
 }
 

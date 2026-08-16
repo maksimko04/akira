@@ -26,6 +26,20 @@ router.get("/", CheckAuthorization,
     })
 );
 
+router.get("/get-members/:id", CheckAuthorization,
+    idPathValidator(),
+    paginationValidator(),
+    validator,
+    catchAsync(async (req, res, next) => {
+        const chatId = req.params.id;
+        const {limit, skip} = req.query;
+
+        const members = await ChatService.getMembersDetail(chatId, {limit, skip});
+
+        responseService.success(res, {members});
+    })
+)
+
 router.post("/create", 
     uploadAvatarMiddleware,
     CheckAuthorization,
