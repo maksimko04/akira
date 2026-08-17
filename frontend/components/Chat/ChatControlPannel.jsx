@@ -20,7 +20,7 @@ const actions = [
 ];
 
 export default () => {
-    const { selectedChat } = useChat();
+    const { selectedChat, setSelectedChat } = useChat();
     const [membersDetail, setMembersDetail] = useState([]);
     const createToast = useToast();
 
@@ -36,11 +36,22 @@ export default () => {
         }
 
         getMembersDetail();
+    }, [selectedChat._id]);
+
+    useEffect(() => {
+        setMembersDetail(prev => prev.filter(member => selectedChat.members.some(m => m.user === member._id)));
     }, [selectedChat.members]);
 
-    const removeUser = () => {
-        console.log("user removed");
-        //ToDo....
+    const removeUser = async (memberId) => {
+        try {
+            await ChatApi.removeMember(selectedChat._id, memberId);
+
+            setSelectedChat(prev => (
+                { ...prev, members: prev.members.filter(member => member.user !== memberId) }));
+        }
+        catch (err) {
+            createToast(typesToast.error);
+        }
     }
 
     return (createPortal(<div className={styles.container}>
@@ -66,7 +77,7 @@ export default () => {
                     </div>
                     {
                         strengthOfRole[selectedChat.myMember.role] > strengthOfRole[member.role] &&
-                        <button onClick={removeUser} className={`${styles.remove__button} button__wrapper`}>Remove</button>
+                        <button onClick={() => removeUser(member._id)} className={`${styles.remove__button} button__wrapper`}>Remove</button>
                     }
                 </div>
             )}

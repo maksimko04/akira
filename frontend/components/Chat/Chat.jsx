@@ -51,6 +51,8 @@ export default (props) => {
             textMessageRef.current.value = "";
             messageNeedSend.current = false;
         }
+
+        setIsControlPanelOpen(false);
     }, [selectedChat]);
 
     if (isLoading) {
@@ -85,7 +87,7 @@ export default (props) => {
                 </div>
         }
 
-        {isControlPanelOpen && 
+        {selectedChat && isControlPanelOpen && 
             <ChatControlPannel />
         }
     </div>);

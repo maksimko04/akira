@@ -11,7 +11,7 @@ import { emailRegex, groupTitleRegex, nameRegex, usernameRegex } from "../../con
 import serverResponses from "../../constants/serverResponses";
 import { avatarsStorage } from "../../constants/fileBackets";
 
-const modalCreateChat = (setActiveModal, createToast) => ({
+const modalCreateChat = (setActiveModal, createToast, setChats, openChat) => ({
     submitText: "Create",
 
     title: "Create Chat",
@@ -56,15 +56,19 @@ const modalCreateChat = (setActiveModal, createToast) => ({
 
     callback: async (data, formData) => {
         try {
-            if(!groupTitleRegex.test(data.title)){
+            if (!groupTitleRegex.test(data.title)) {
                 createToast(typesToast.warning, "Incorrect format title");
                 return;
             }
 
-            await ChatApi.createChat(formData);
+            const response = await ChatApi.createChat(formData);
+
+            setChats(prev => [response.data.chat, ...prev]);
+            openChat(response.data.chat);
+
             setActiveModal(null);
         }
-        catch (err) {}
+        catch (err) { }
     }
 });
 
@@ -203,8 +207,8 @@ const actions = [
     },
     {
         text: "New Chat",
-        action: ({ setMenuIsOpen, setActiveModal, createToast }) => {
-            setActiveModal(modalCreateChat(setActiveModal, createToast));
+        action: ({ setMenuIsOpen, setActiveModal, createToast, setChats, openChat }) => {
+            setActiveModal(modalCreateChat(setActiveModal, createToast, setChats, openChat));
             setMenuIsOpen(null);
         }
     },
@@ -218,7 +222,7 @@ const actions = [
 ];
 
 export default forwardRef((props, ref) => {
-    const { logout, setActiveModal } = useChat();
+    const { logout, setActiveModal, setChats, openChat } = useChat();
     const { setMenuIsOpen } = props;
     const createToast = useToast();
 
@@ -226,7 +230,14 @@ export default forwardRef((props, ref) => {
         <div className={styles.container}>
             {actions.map(action =>
                 <button key={action.text} className={styles.option}
-                    onClick={() => action.action({ logout, setActiveModal, setMenuIsOpen, createToast })}>{action.text}</button>
+                    onClick={() => action.action({
+                        logout,
+                        setActiveModal,
+                        setMenuIsOpen,
+                        createToast,
+                        setChats,
+                        openChat
+                    })}>{action.text}</button>
             )}
         </div>
     </div>);

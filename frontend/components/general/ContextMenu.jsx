@@ -1,5 +1,4 @@
 import useMe from "../../hooks/useMe";
-import { useChat } from "../../providers/ChatContext";
 import styles from "./contextMenu.module.scss";
 
 export default (props) => {
@@ -7,12 +6,17 @@ export default (props) => {
 
     const [user, isLoading] = useMe();
 
+    const clickButton = (event, func) => {
+        event.stopPropagation();
+        func();
+    }
+
     return (<ul style={info.pos ? { ["--x"]: info.pos.x + "px", ["--y"]: info.pos.y + "px" } : {}}
         className={`${styles.container} ${className}`}>
         {actions
             .filter(action => !action.hideWhen?.(user, info.data))
             .map(action =>
-                <button key={action.text} className={styles.action} onClick={() => action.action(info.data)}>
+                <button key={action.text} className={styles.action} onClick={(event) => clickButton(event, () => action.action(info.data))}>
                     <p>{action.text}</p>
                 </button>
             )}

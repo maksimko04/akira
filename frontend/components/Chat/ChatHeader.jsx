@@ -19,8 +19,8 @@ const actions = [
         text: "delete Group",
         hideWhen: (user, { chat }) => {
             for (const member of chat.members) {
-                if (member.user === user._id) {
-                    return member.role !== MemberRoles.OWNER;
+                if (member.user === user) {
+                    return member.role !== memberRoles.OWNER;
                 }
             }
         },
@@ -32,7 +32,7 @@ const actions = [
                     setChats(prev => prev.filter(chatTemp => chatTemp._id !== chat._id));
                 }
             }
-            catch { }
+            catch {}
         }
     }
 ]

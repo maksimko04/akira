@@ -199,6 +199,36 @@ export const ChatProvider = ({ children }) => {
             setMessages(prev => prev.filter(message => message._id !== messageId));
         });
 
+        socket.on("deleted_member", ({memberId, chatId}) => {
+            setSelectedChat(prev => {
+                if(!prev || prev._id !== chatId){
+                    return prev;
+                }
+
+                if(me === memberId){
+                    return null;
+                }
+
+                return {
+                    ...prev,
+                    members: prev.members.filter(member => member.user !== memberId)
+                };
+            });
+
+            setChats(prev => {
+                if(me === memberId){
+                    return prev.filter(chat => chat._id !== chatId);
+                }
+
+                return prev.map(chat => {
+                    if(chat._id !== chatId){
+                        return chat;
+                    }
+                    return { ...chat, members: chat.members.filter(member => member.user !== memberId)};
+                });
+            });
+        });
+        
         const loadChats = async () => {
             try {
                 const response = await ChatApi.getChats();

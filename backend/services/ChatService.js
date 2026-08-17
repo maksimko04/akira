@@ -460,7 +460,7 @@ class ChatService {
     }
 
     async removeMember(actorId, chatId, memberId) {
-        const chat = getChat(chatId);
+        const chat = await this.getChat(chatId);
         if (!chat) {
             throw ApiError.badRequest("CHAT_NOT_EXISTS");
         }
@@ -480,8 +480,8 @@ class ChatService {
             throw ApiError.forbidden();
         }
 
-        chat.members = chat.members.filter(member => member.id != memberId);
-        await chat.save();
+        chat.members = chat.members.filter(member => member.user != memberId);
+        return await chat.save();
     }
 
     async getMembersDetail(chatId, pagination) {

@@ -55,7 +55,7 @@ router.post("/create",
         const io = req.app.get("io");
 
         chat.members.forEach(member => {
-            if(member.user === req.user.id){
+            if(member.user.toString() === req.user.id){
                 return;
             }
             io.to(`user_${member.user}`).emit("created_chat", chat);
@@ -74,7 +74,7 @@ router.delete("/:id", CheckAuthorization,
         const io = req.app.get("io");
 
         chat.members.forEach(member => {
-            if(member.user === req.user.id){
+            if(member.user.toString() === req.user.id){
                 return;
             }
             io.to(`user_${member.user}`).emit("deleted_chat", chat._id);
@@ -121,15 +121,29 @@ router.put("/edit-rights/:id", CheckAuthorization,
     })
 )
 
-router.put("/delete-member/:id", CheckAuthorization,
+router.delete("/delete-member/:id", CheckAuthorization,
     idPathValidator(),
     idBodyValidator("memberId"),
     validator,
     catchAsync(async (req, res, next) => {
-        await ChatService.removeMember(req.user.id, req.params.id, req.body.memberId);
+        const chatId = req.params.id;
+        const memberId = req.body.memberId;
+        const chat = await ChatService.removeMember(req.user.id, chatId, memberId);
+
+        const io = req.app.get("io");
+
+        chat.members.forEach(member => {
+            if(req.user.id === member.user.toString()){
+                return;
+            }
+
+            io.to(`user_${member.user}`).emit("deleted_member", {memberId, chatId}); 
+        });
+
+        io.to(`user_${memberId}`).emit("deleted_member", {memberId, chatId});
 
         responseService.success(res, {});
     })
-)
+);
 
 export default router;
