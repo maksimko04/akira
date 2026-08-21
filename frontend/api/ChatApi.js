@@ -25,6 +25,14 @@ class ChatApi {
             data: { memberId }
         });
     }
+
+    async addMembers(chatId, members) {
+        return await api.put(`/chat/add-members/${chatId}`, { members });
+    }
+
+    async leaveChat(chatId){
+        return await api.delete(`/chat/leave-chat/${chatId}`);
+    }
 }
 
 export default new ChatApi();

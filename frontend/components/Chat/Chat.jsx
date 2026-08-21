@@ -14,13 +14,13 @@ import typesChat from "../../constants/typesChat";
 import { useEffect } from "react";
 import { useRef } from "react";
 import { checkRight, rights } from "../../shared/ChatRights";
-import ChatControlPannel from "./ChatControlPannel";
+import ChatControlPannel from "@/components/ControlPannel/ChatControlPannel";
 
 export default (props) => {
     const [user, isLoading] = useMe();
     const { openChat, selectedChat, setSelectedChat, sendMessage, targetMessage, textMessageRef, socket } = useChat();
     const [isControlPanelOpen, setIsControlPanelOpen] = useState(false);
-    const messageNeedSend = useRef(false);
+    const messageToUncreatedChat = useRef(false);
 
     const onSubmit = async event => {
         event.preventDefault();
@@ -35,7 +35,7 @@ export default (props) => {
 
                 openChat(response.data.chat);
 
-                messageNeedSend.current = true;
+                messageToUncreatedChat.current = true;
             }
             catch { }
             return;
@@ -46,14 +46,26 @@ export default (props) => {
     }
 
     useEffect(() => {
-        if (messageNeedSend.current) {
+        if (messageToUncreatedChat.current) {
             sendMessage(textMessageRef.current.value);
             textMessageRef.current.value = "";
-            messageNeedSend.current = false;
+            messageToUncreatedChat.current = false;
         }
 
-        setIsControlPanelOpen(false);
-    }, [selectedChat]);
+        setIsControlPanelOpen(false)
+    }, [selectedChat?._id]);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            setIsControlPanelOpen(false);
+        };
+
+        window.addEventListener("mousedown", handleClickOutside);
+
+        return () => {
+            window.removeEventListener("mousedown", handleClickOutside);
+        }
+    }, []);
 
     if (isLoading) {
         return null;
@@ -65,7 +77,7 @@ export default (props) => {
                 <>
                     <ChatHeader setIsControlPanelOpen={setIsControlPanelOpen} />
                     <MessagesBlock />
-                    {checkRight(selectedChat.myMember, rights.MEMBER.SEND_MESSAGES) &&
+                    {(selectedChat.uncreated || checkRight(selectedChat.myMember, rights.MEMBER.SEND_MESSAGES)) &&
                         <form onSubmit={onSubmit} className={styles.sending__area}>
                             <div className={styles.writing__area}>
                                 {targetMessage &&
@@ -87,8 +99,8 @@ export default (props) => {
                 </div>
         }
 
-        {selectedChat && isControlPanelOpen && 
-            <ChatControlPannel />
+        {selectedChat && isControlPanelOpen &&
+            <ChatControlPannel setIsControlPanelOpen={setIsControlPanelOpen} />
         }
     </div>);
 }

@@ -26,7 +26,7 @@ function stringToAvatarColor(value) {
     return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
 }
 export default (props) => {
-    const { name, defaultImage, additionalInfo, onlyView, height, fontSize } = props;
+    const { name, defaultImage, additionalInfo, onlyView, height, fontSize, outClassName } = props;
 
     const [preview, setPreview] = useState(defaultImage);
 
@@ -52,7 +52,7 @@ export default (props) => {
     }
 
     return (
-        <div className={`${styles.avatar__container} ${!onlyView && styles.interactive}`} style={{["--height"]: height}}>
+        <div className={`${styles.avatar__container} ${!onlyView && styles.interactive} ${outClassName}`} style={{["--height"]: height}}>
             {onlyView ?
                 avatarContent :
                 <>

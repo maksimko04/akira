@@ -72,6 +72,18 @@ export const ChatProvider = ({ children }) => {
 
         try {
             const response = await MessageApi.getMessages(chat._id);
+
+            chat.specialMessage = null;
+            setChats(prev => prev.map(chatTemp => {
+                if (chatTemp._id === chat._id) {
+                    return {
+                        ...chatTemp,
+                        lastMessage: response.data.messages?.[0]?.text,
+                    };
+                }
+                return chatTemp;
+            }));
+
             socket.emit("join_chat", { chatId: chat._id });
             const myMember = getMyMember(chat);
             setSelectedChat({ ...chat, myMember });
@@ -164,6 +176,8 @@ export const ChatProvider = ({ children }) => {
                     chat.title = chat.createdBy;
                 }
 
+                chat.specialMessage = "You added to chat";
+
                 return [chat, ...prev];
             });
         })
@@ -171,6 +185,20 @@ export const ChatProvider = ({ children }) => {
         socket.on("deleted_chat", chatId => {
             setSelectedChat(prev => prev?._id === chatId ? null : prev);
             setChats(prev => prev.filter(chat => chat._id !== chatId));
+        })
+
+        socket.on("chat_changed", chat => {
+            setChats(prev => {
+                return prev.map(chatTemp => {
+                    if(chatTemp._id !== chat._id){
+                        return chatTemp;
+                    }
+
+                    return {...chat, lastMessage: chatTemp.lastMessage}; 
+                })
+            });
+
+            setSelectedChat(prev => prev._id === chat._id ? ({...chat, myMember: prev.myMember}) : prev);
         })
 
         socket.on("last_message_updated", ({ chatId, messageText, isChatActivity }) => {
@@ -199,13 +227,13 @@ export const ChatProvider = ({ children }) => {
             setMessages(prev => prev.filter(message => message._id !== messageId));
         });
 
-        socket.on("deleted_member", ({memberId, chatId}) => {
+        socket.on("deleted_member", ({ memberId, chatId }) => {
             setSelectedChat(prev => {
-                if(!prev || prev._id !== chatId){
+                if (!prev || prev._id !== chatId) {
                     return prev;
                 }
 
-                if(me === memberId){
+                if (me === memberId) {
                     return null;
                 }
 
@@ -216,19 +244,19 @@ export const ChatProvider = ({ children }) => {
             });
 
             setChats(prev => {
-                if(me === memberId){
+                if (me === memberId) {
                     return prev.filter(chat => chat._id !== chatId);
                 }
 
                 return prev.map(chat => {
-                    if(chat._id !== chatId){
+                    if (chat._id !== chatId) {
                         return chat;
                     }
-                    return { ...chat, members: chat.members.filter(member => member.user !== memberId)};
+                    return { ...chat, members: chat.members.filter(member => member.user !== memberId) };
                 });
             });
         });
-        
+
         const loadChats = async () => {
             try {
                 const response = await ChatApi.getChats();

@@ -8,7 +8,8 @@ import styles from "./listChats.module.scss"
 import { useChat } from "../../providers/ChatContext";
 import UserApi from "../../api/UserApi";
 import Avatar from "../general/Avatar";
-import { groupAvatarsStorage } from "../../constants/fileBackets";
+import { groupAvatarsStorage, avatarsStorage } from "../../constants/fileBackets";
+import typesChat from "../../constants/typesChat";
 
 export default (props) => {
     const { search, type } = props;
@@ -46,21 +47,28 @@ export default (props) => {
     }, [search]);
 
     useEffect(() => {
-        if(!type){
+        if (!type) {
             setDisplayedChats(chats);
         }
     }, [chats]);
 
     let getChatInfo = (obj, info) => {
-        switch(info){
+        switch (info) {
             case "title": {
                 return type === "global" ? obj.name : obj.title;
             }
             case "additinalInfo": {
-                return type === "global" ? "@" + obj.username : obj.lastMessage;
+                return type === "global" ? "@" + obj.username : (obj.specialMessage ? obj.specialMessage : obj.lastMessage);
+            }
+            case "avatar": {
+                return (type === "global" || obj.type === typesChat.PRIVATE ? avatarsStorage : groupAvatarsStorage) + obj.avatar;
+            }
+            case "additionalAvatarInfo": { 
+                return type === "global" ? obj.name : obj.title;
             }
         }
     }
+
 
     return (<div className={styles.container}>
         {type === "global" &&
@@ -70,14 +78,15 @@ export default (props) => {
         }
         {
             displayedChats.map(chat =>
-                <button onClick={() => openChat(type === "global" ? {uncreated: true, name: chat.name, userId: chat._id} : chat)}
+                <button onClick={() => openChat(type === "global" ? { uncreated: true, name: chat.name, userId: chat._id } : chat)}
                     className={`${styles.chat} ${selectedChat && chat._id === selectedChat._id && styles.selected__chat}`}
                     key={chat._id}>
-                    <Avatar onlyView={true} defaultImage={chat.avatar && groupAvatarsStorage + chat.avatar} 
-                    additionalInfo={chat.title} fontSize="36px" />
+                    <Avatar onlyView={true} defaultImage={chat.avatar && getChatInfo(chat, "avatar")}
+                        additionalInfo={getChatInfo(chat, "additionalAvatarInfo")} fontSize="36px" />
                     <div className={styles.text__info}>
                         <p>{getChatInfo(chat, "title")}</p>
-                        <p className={styles.additional__info}>{getChatInfo(chat, "additinalInfo")}</p>
+                        <p className={`${styles.additional__info} 
+                        ${chat.specialMessage && styles.special__additional__info}`}>{getChatInfo(chat, "additinalInfo")}</p>
                     </div>
                 </button>
             )

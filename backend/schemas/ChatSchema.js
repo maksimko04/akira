@@ -31,6 +31,11 @@ const ChatSchema = new mongoose.Schema({
             }],
             _id: false
         },
+        owner: {
+            type: mongoose.Schema.Types.ObjectId,
+            required: false,
+            ref: "User"
+        },
         lastActivity: {
             type: Date,
             default: Date.now,

@@ -21,7 +21,10 @@
 }
 
 .text__info {
+    display: flex;
     text-align: left;
+    flex-direction: column;
+    gap: 5px;
 }
 
 .selected__chat {
@@ -39,4 +42,8 @@
 .additional__info {
     color: var(--text-muted);
     font-size: 14px;
+}
+
+.special__additional__info {
+    color: var(--primary-color);
 }

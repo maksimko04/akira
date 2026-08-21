@@ -10,6 +10,7 @@ import ChatService from "../services/ChatService.js";
 import { paginationValidator, idPathValidator, arrayOfIdValidator, idBodyValidator, searchText } from "../validation/GeneralValidator.js";
 import { chatTypeValidator, memberRightsValidator, memberRoleValidator, membersValidator, titleValidator } from "../validation/ChatValidator.js";
 import { uploadAvatarMiddleware } from "../middleware/Upload.js";
+import ResponseService from "../services/ResponseService.js";
 
 const router = new Router();
 
@@ -32,15 +33,15 @@ router.get("/get-members/:id", CheckAuthorization,
     validator,
     catchAsync(async (req, res, next) => {
         const chatId = req.params.id;
-        const {limit, skip} = req.query;
+        const { limit, skip } = req.query;
 
-        const members = await ChatService.getMembersDetail(chatId, {limit, skip});
+        const members = await ChatService.getMembersDetail(chatId, { limit, skip });
 
-        responseService.success(res, {members});
+        responseService.success(res, { members });
     })
 )
 
-router.post("/create", 
+router.post("/create",
     uploadAvatarMiddleware,
     CheckAuthorization,
     titleValidator(true),
@@ -55,7 +56,7 @@ router.post("/create",
         const io = req.app.get("io");
 
         chat.members.forEach(member => {
-            if(member.user.toString() === req.user.id){
+            if (member.user.toString() === req.user.id) {
                 return;
             }
             io.to(`user_${member.user}`).emit("created_chat", chat);
@@ -74,7 +75,7 @@ router.delete("/:id", CheckAuthorization,
         const io = req.app.get("io");
 
         chat.members.forEach(member => {
-            if(member.user.toString() === req.user.id){
+            if (member.user.toString() === req.user.id) {
                 return;
             }
             io.to(`user_${member.user}`).emit("deleted_chat", chat._id);
@@ -95,14 +96,29 @@ router.put("/edit/:id", CheckAuthorization,
     })
 )
 
-router.put("/add-member/:id", CheckAuthorization,
+router.put("/add-members/:id", CheckAuthorization,
     idPathValidator(),
     arrayOfIdValidator("members"),
     validator,
     catchAsync(async (req, res, next) => {
-        const members = await ChatService.addMembers(req.user.id, req.params.id, req.body);
+        const members = req.body.members;
+        const chat = await ChatService.addMembers(req.user.id, req.params.id, members);
 
-        responseService.success(res, { members });
+        const io = req.app.get("io");
+
+        members.forEach(member => {
+            io.to(`user_${member}`).emit("created_chat", chat);
+        });
+
+        chat.members.forEach(member => {
+            if (members.includes(member.user.toString()) || req.user.id === member.user.toString()) {
+                return;
+            }
+
+            io.to(`user_${member.user}`).emit("chat_changed", chat);
+        });
+
+        responseService.success(res, { chat });
     })
 )
 
@@ -133,17 +149,32 @@ router.delete("/delete-member/:id", CheckAuthorization,
         const io = req.app.get("io");
 
         chat.members.forEach(member => {
-            if(req.user.id === member.user.toString()){
+            if (req.user.id === member.user.toString()) {
                 return;
             }
 
-            io.to(`user_${member.user}`).emit("deleted_member", {memberId, chatId}); 
+            io.to(`user_${member.user}`).emit("deleted_member", { memberId, chatId });
         });
 
-        io.to(`user_${memberId}`).emit("deleted_member", {memberId, chatId});
+        io.to(`user_${memberId}`).emit("deleted_member", { memberId, chatId });
 
         responseService.success(res, {});
     })
 );
+
+router.delete("/leave-chat/:chatId", CheckAuthorization,
+    idPathValidator("chatId"),
+    validator,
+    catchAsync(async (req, res, next) => {
+        const chatId = req.params.chatId;
+        const chat = await ChatService.leaveChat(req.user.id, chatId);
+
+        const io = req.app.get("io");
+
+        io.to(`chat_${chatId}`).emit("chat_changed", chat);
+
+        responseService.success(res, { chat });
+    })
+)
 
 export default router;

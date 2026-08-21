@@ -1,0 +1,171 @@
+import { useChat } from "../../providers/ChatContext";
+import { createPortal } from 'react-dom';
+
+import styles from "./chatControlPannel.module.scss";
+import Avatar from "../general/Avatar";
+import { avatarsStorage, groupAvatarsStorage } from "../../constants/fileBackets";
+import { useEffect, useMemo, useRef, useState } from "react";
+import ChatApi from "../../api/ChatApi";
+import { useToast } from "@/providers/toastProvider"
+import typesToast from "@/constants/typesToast";
+import { checkRight, rights, strengthOfRole } from "../../shared/ChatRights";
+import UserApi from "../../api/UserApi";
+import { Xmark } from "@gravity-ui/icons";
+import { Icon } from "@gravity-ui/uikit";
+
+const createAddMembersModal = ({ setSelectedChat, selectedChat, setActiveModal, createToast }) => ({
+    submitText: "Add",
+
+    title: "Add members",
+    width: "600px",
+    nameUsers: "members",
+    excludeUser: selectedChat.members.map(member => member.user),
+
+    content: [
+        {
+            type: "finder-user",
+            name: "Add User"
+        }
+    ],
+
+    callback: async (data) => {
+        try {
+            const response = await ChatApi.addMembers(selectedChat._id, data.members);
+            setActiveModal(null);
+
+            setSelectedChat(prev => ({ ...prev, members: response.data.chat.members }));
+
+            createToast(typesToast.success, `Added ${data.members.length} members`);
+        }
+        catch (err) {
+            createToast();
+        }
+    }
+});
+
+const actions = [
+    {
+        title: "Change group info",
+        callback: () => {
+
+        }
+    },
+    {
+        title: "Add members",
+        callback: (info) => {
+            info.setActiveModal(createAddMembersModal(info));
+        }
+    }
+];
+
+export default (props) => {
+    const { setIsControlPanelOpen } = props;
+    const { selectedChat, setSelectedChat, setActiveModal } = useChat();
+    const [membersDetail, setMembersDetail] = useState([]);
+    const createToast = useToast();
+    const membersDetailsInitialized = useRef(false);
+
+    useEffect(() => {
+        const getMembersDetail = async () => {
+            try {
+                const response = await ChatApi.getMembersDetails(selectedChat._id);
+                setMembersDetail(response.data.members);
+            }
+            catch {
+                createToast()
+            }
+            finally {
+                membersDetailsInitialized.current = true;
+            }
+        }
+
+        getMembersDetail();
+    }, [selectedChat._id]);
+
+    useEffect(() => {
+        let isMounted = true;
+        const changeMembersDetail = async () => {
+            setMembersDetail(prev => prev.filter(member => selectedChat.members.some(m => m.user === member._id)));
+
+            const newMembers = await Promise.all(
+                selectedChat.members
+                    .filter(member => !membersDetail.some(memberDetail => memberDetail._id === member.user))
+                    .map(async member => {
+                        try {
+                            const response = await UserApi.getUser(member.user);
+
+                            return { ...response.data.user, role: member.role };
+                        }
+                        catch {
+                            return null;
+                        }
+                    })
+            );
+
+            if (isMounted) {
+                setMembersDetail(prev => [...prev, ...(newMembers.filter(Boolean))]);
+            }
+        }
+
+        if (membersDetailsInitialized.current) {
+            changeMembersDetail();
+        }
+
+        return () => {
+            isMounted = false;
+        }
+    }, [selectedChat.members]);
+
+    const removeUser = async (memberId) => {
+        try {
+            await ChatApi.removeMember(selectedChat._id, memberId);
+
+            setSelectedChat(prev => (
+                { ...prev, members: prev.members.filter(member => member.user !== memberId) }));
+        }
+        catch (err) {
+            createToast();
+        }
+    }
+
+    return (createPortal(<div onMouseDown={(event) => {event.stopPropagation()}} className={styles.container}>
+        <div className={styles.general__info}>
+            <Avatar outClassName={styles.chat__avatar} onlyView={true} defaultImage={selectedChat.avatar && groupAvatarsStorage + selectedChat.avatar}
+                additionalInfo={selectedChat.title} fontSize="36px" height="65%" />
+            <div className={styles.text__general__info}>
+                <p className={styles.title}>{selectedChat.title}</p>
+                <p className={styles.count__members}>{`${selectedChat.members.length} members`}</p>
+            </div>
+            <div className="button__wrapper" onClick={() => setIsControlPanelOpen(false)}>
+                <Icon style={{ ["--height"]: "30px" }} data={Xmark} className={`hover__icon ${styles.xmark}`} />
+            </div>
+        </div>
+        <div className={styles.functions}>
+            {actions.map(action =>
+                <button key={action.title} className={styles.function__buton}
+                    onClick={() => action.callback({
+                        selectedChat,
+                        setActiveModal,
+                        createToast,
+                        setSelectedChat
+                    })} >{action.title}</button>
+            )}
+        </div>
+        <ul className={styles.members__list}>
+            {membersDetail.map(member =>
+                <div key={member._id} className={styles.member}>
+                    <Avatar onlyView={true} defaultImage={member.avatar && avatarsStorage + member.avatar}
+                        additionalInfo={member.name} fontSize="14px" height="90%" />
+                    <div className={styles.text__info__member}>
+                        <p>{member.name}</p>
+                        <p>@{member.username}</p>
+                    </div>
+                    {
+                        strengthOfRole[selectedChat.myMember.role] > strengthOfRole[member.role] &&
+                        <button onClick={(event) => { event.stopPropagation(), removeUser(member._id) }} className={`${styles.remove__button} button__wrapper`}>Remove</button>
+                    }
+                </div>
+            )}
+        </ul>
+    </div>, document.body));
+}

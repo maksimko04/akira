@@ -64,6 +64,10 @@ class ChatService {
     async checkMemberInChat(userId, chatId) {
         const chat = await this.getChat(chatId);
 
+        if (!chat) {
+            throw ApiError.badRequest("CHAT_NOT_EXISTS");
+        }
+
         const member = this.findMember(chat, userId);
 
         return member !== undefined;
@@ -109,29 +113,49 @@ class ChatService {
                 as: "users"
             },
         },
+
+        {
+            $addFields: {
+                otherUser: {
+                    $cond: {
+                        if: { $eq: ["$type", ChatTypes.PRIVATE] },
+                        then: {
+                            $first: {
+                                $filter: {
+                                    input: "$users",
+                                    as: "m",
+                                    cond: { $ne: ["$$m._id", userObjectId] }
+                                }
+                            }
+                        },
+                        else: null
+                    }
+                }
+            }
+        },
+
         {
             $addFields: {
                 title: {
                     $cond: {
                         if: { $eq: ["$type", ChatTypes.PRIVATE] },
-                        then: {
-                            $arrayElemAt: [{
-                                $map: {
-                                    input: {
-                                        $filter: {
-                                            input: "$users",
-                                            as: "m",
-                                            cond: { $ne: ["$$m._id", userObjectId] }
-                                        }
-                                    },
-                                    as: "otherUser",
-                                    in: "$$otherUser.username"
-                                },
-                            }, 0]
-                        },
+                        then: "$otherUser.username",
                         else: "$title"
                     }
+                },
+                avatar: {
+                    $cond: {
+                        if: { $eq: ["$type", ChatTypes.PRIVATE] },
+                        then: "$otherUser.avatar",
+                        else: "$avatar"
+                    }
                 }
+            }
+        },
+
+        {
+            $project: {
+                otherUser: 0
             }
         },];
 
@@ -371,8 +395,8 @@ class ChatService {
         return chat;
     }
 
-    async addMembers(actorId, chatId, ...membersId) {
-        const chat = getChat(chatId);
+    async addMembers(actorId, chatId, membersId) {
+        const chat = await this.getChat(chatId);
         if (!chat) {
             throw ApiError.badRequest("CHAT_NOT_EXISTS");
         }
@@ -396,16 +420,17 @@ class ChatService {
                 throw ApiError.badRequest("USER_NOT_EXISTS");
             }
 
+
             chat.members.push({
                 user: newMemberId,
                 role: MemberRoles.MEMBER,
-                right: Object.keys(MemberRights.MEMBER)
+                rights: Object.keys(MemberRights.MEMBER)
             });
         }
 
         await chat.save();
 
-        return chat.members;
+        return chat;
     }
 
     async editRights(actorId, chatId, memberId, role, rights) {
@@ -481,6 +506,26 @@ class ChatService {
         }
 
         chat.members = chat.members.filter(member => member.user != memberId);
+        return await chat.save();
+    }
+
+    async leaveChat(actorId, chatId) {
+        const chat = await this.getChat(chatId);
+        if (!chat) {
+            throw ApiError.badRequest("CHAT_NOT_EXISTS");
+        }
+
+        const actor = this.findMember(chat, actorId);
+
+        if (!actor) {
+            throw ApiError.badRequest();
+        }
+
+        if (actor.role === "OWNER") {
+            throw ApiError.badRequest("OWNER_CANT_LEAVE_CHAT");
+        }
+
+        chat.members = chat.members.filter(member => member.user.toString() !== actorId);
         return await chat.save();
     }
 

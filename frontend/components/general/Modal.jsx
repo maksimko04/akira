@@ -60,7 +60,7 @@ export default (props) => {
                     </select>
                 </div>
             );
-            case "finder-user": return (<UserSearch userRef={usersRef} key={index}/>);
+            case "finder-user": return (<UserSearch userRef={usersRef} key={index} exclude={info.excludeUser}/>);
         }
     }
 

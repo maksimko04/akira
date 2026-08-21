@@ -16,7 +16,7 @@ export const paginationValidator = (isOptional = true) => [
     )
 ];
 
-export const idPathValidator = () => param("id").isMongoId().withMessage("INVALID_ID");
+export const idPathValidator = (name) => param(name ? name : "id").isMongoId().withMessage("INVALID_ID");
 
 export const idBodyValidator = (nameField, isOptional = false) => createValidator(
     body(nameField),

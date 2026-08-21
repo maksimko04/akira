@@ -13,10 +13,11 @@ import responseStatuses from "../../constants/responseStatuses";
 import ContextMenu from "@/components/general/ContextMenu.jsx";
 import { Bars } from "@gravity-ui/icons"
 import { Icon } from '@gravity-ui/uikit';
+import { useToast } from "@/providers/toastProvider"
 
 const actions = [
     {
-        text: "delete Group",
+        text: "delete Chat",
         hideWhen: (user, { chat }) => {
             for (const member of chat.members) {
                 if (member.user === user) {
@@ -32,13 +33,29 @@ const actions = [
                     setChats(prev => prev.filter(chatTemp => chatTemp._id !== chat._id));
                 }
             }
-            catch {}
+            catch { }
+        }
+    },
+    {
+        text: "leave Group",
+        hideWhen: (user, { chat }) => {
+            return chat.myMember.role === memberRoles.OWNER
+        },
+        action: async ({ setChats, setSelectedChat, chat, createToast }) => {
+            try {
+                const response = await ChatApi.leaveChat(chat._id);
+                setSelectedChat(null);
+                setChats(prev => prev.filter(chatTemp => chatTemp._id !== chat._id));
+            }
+            catch {
+                createToast();
+            }
         }
     }
 ]
 
 export default (props) => {
-    const {setIsControlPanelOpen} = props;
+    const { setIsControlPanelOpen } = props;
     const { chats, setChats, setSelectedChat, selectedChat } = useChat();
 
     const [user, loading] = useMe();
@@ -46,6 +63,8 @@ export default (props) => {
     const [infoContextMenu, setInfoContextMenu] = useState(null);
     const buttonRef = useRef(null);
     const menuRef = useRef(null);
+
+    const createToast = useToast();
 
     useEffect(() => {
         if (!selectedChat) {
@@ -88,6 +107,7 @@ export default (props) => {
                 data: {
                     setChats,
                     setSelectedChat,
+                    createToast,
                     chat: selectedChat
                 }
             });
@@ -98,7 +118,7 @@ export default (props) => {
     }
 
 
-    return (<header onClick={() => setIsControlPanelOpen(prev => !prev)} className={styles.header}>
+    return (<header onClick={(event) => {event.stopPropagation(); setIsControlPanelOpen(prev => !prev)}} className={styles.header}>
         <div className={styles.text__info}>
             <p className={styles.title}>{selectedChat.title}</p>
             <p className={styles.additional__info}>{additionalInfo}</p>

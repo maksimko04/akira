@@ -9,7 +9,7 @@ import { avatarsStorage } from "../../constants/fileBackets";
 
 export default (props) => {
 
-    const { name, userRef } = props;
+    const { name, userRef, exclude=[] } = props;
 
     const [userSearchText, setUserSearchText] = useState("");
     const [suggestedUsers, setSuggestedUsers] = useState([]);
@@ -20,7 +20,7 @@ export default (props) => {
     useEffect(() => {
         const findSuggestedUsers = async () => {
             try {
-                const response = await UserApi.globalSearch(userSearchText, 3, listMember.map(member => member._id), true);
+                const response = await UserApi.globalSearch(userSearchText, 3, [...exclude, ...listMember.map(member => member._id)], true);
                 setSuggestedUsers(response.data.users);
             }
             catch { }
@@ -34,7 +34,7 @@ export default (props) => {
     }, []);
 
     const addMember = (user) => {
-        if(listMember.find(userInList => userInList._id === user._id)){
+        if (listMember.find(userInList => userInList._id === user._id)) {
             return;
         }
         setListMember(prev => [user, ...prev]);
@@ -45,7 +45,7 @@ export default (props) => {
 
     const removeMember = (userId) => {
         setListMember(prev => prev.filter(user => user._id !== userId));
-        userRef.current = userRef.current.filter(user => user._id !== userId);
+        userRef.current = userRef.current.filter(user => user !== userId);
     }
 
     return (
@@ -56,7 +56,7 @@ export default (props) => {
                     listMember.length === 0 ? "no members yet added" : `${listMember.length} members`}
                 </p>
             </label>
-            <input ref={searchRef} 
+            <input ref={searchRef}
                 type="text"
                 value={userSearchText}
                 onChange={(e) => setUserSearchText(e.target.value)}
