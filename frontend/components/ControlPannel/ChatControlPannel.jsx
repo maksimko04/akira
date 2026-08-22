@@ -47,12 +47,18 @@ const createAddMembersModal = ({ setSelectedChat, selectedChat, setActiveModal, 
 const actions = [
     {
         title: "Change group info",
+        hideWhen: (info) => {
+            return info.selectedChat.type === typesChat.PRIVATE;
+        },
         callback: () => {
 
         }
     },
     {
         title: "Add members",
+        hideWhen: (info) => {
+            return info.selectedChat.type === typesChat.PRIVATE;
+        },
         callback: (info) => {
             info.setActiveModal(createAddMembersModal(info));
         }
@@ -131,13 +137,20 @@ export default (props) => {
 
     const getStorage = (type) => type === typesChat.PRIVATE ? avatarsStorage : groupAvatarsStorage;
 
-    return (createPortal(<div onMouseDown={(event) => {event.stopPropagation()}} className={styles.container}>
+    const dataForActions = {
+        selectedChat,
+        setActiveModal,
+        createToast,
+        setSelectedChat
+    };
+
+    return (createPortal(<div onMouseDown={(event) => { event.stopPropagation() }} className={styles.container}>
         <div className={styles.general__info}>
             <Avatar outClassName={styles.chat__avatar} zonlyView={true} defaultImage={selectedChat.avatar && getStorage(selectedChat.type) + selectedChat.avatar}
                 additionalInfo={selectedChat.title} fontSize="36px" height="65%" />
             <div className={styles.text__general__info}>
                 <p className={styles.title}>{selectedChat.title}</p>
-                <p className={styles.count__members}>{`${selectedChat.members.length} members`}</p>
+                {selectedChat.type !== typesChat.PRIVATE && <p className={styles.count__members}>{`${selectedChat.members.length} members`}</p>}
             </div>
             <div className="button__wrapper" onClick={() => setIsControlPanelOpen(false)}>
                 <Icon style={{ ["--height"]: "30px" }} data={Xmark} className={`hover__icon ${styles.xmark}`} />
@@ -145,17 +158,12 @@ export default (props) => {
         </div>
         <div className={styles.functions}>
             {actions.map(action =>
-                <button key={action.title} className={styles.function__buton}
-                    onClick={() => action.callback({
-                        selectedChat,
-                        setActiveModal,
-                        createToast,
-                        setSelectedChat
-                    })} >{action.title}</button>
+                !action?.hideWhen?.(dataForActions) && <button key={action.title} className={styles.function__buton}
+                    onClick={() => action.callback(dataForActions)} >{action.title}</button>
             )}
         </div>
         <ul className={styles.members__list}>
-            {membersDetail.map(member =>
+            {selectedChat.type !== typesChat.PRIVATE && membersDetail.map(member =>
                 <div key={member._id} className={styles.member}>
                     <Avatar onlyView={true} defaultImage={member.avatar && avatarsStorage + member.avatar}
                         additionalInfo={member.name} fontSize="14px" height="90%" />

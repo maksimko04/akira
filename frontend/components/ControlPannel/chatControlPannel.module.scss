@@ -25,11 +25,13 @@
     text-align: center;
     width: max-content;
     bottom: 10px;
+    font-size: 20px;
+    height: calc(1.2 * (20px + 14px));
 }
 
 .chat__avatar {
     position: absolute;
-    transform: translateX(-50%);
+    translate: -50%;
     left: 50%;
     top: 10px;
 }

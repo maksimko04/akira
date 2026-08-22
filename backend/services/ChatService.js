@@ -9,7 +9,6 @@ import UserService from "./UserService.js";
 import mongoose from "mongoose";
 import MessagesService from "./MessagesService.js";
 import MinioService from "./MinioService.js";
-import ChatSchema from "../schemas/ChatSchema.js";
 
 //ARRAY CHAT INFO
 const chatInfoArray = Object.keys(chatInfo);
@@ -402,6 +401,10 @@ class ChatService {
         }
 
         const member = this.findMember(chat, actorId);
+
+        if(chat.type === chatTypes.PRIVATE){
+            throw ApiError.badRequest();
+        }
 
         if (!member) {
             throw ApiError.forbidden();

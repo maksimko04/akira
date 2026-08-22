@@ -64,7 +64,7 @@ export default (props) => {
         }
     }
 
-    return (<form style={{ width: info.width }} onSubmit={onSubmit} ref={formRef} className={styles.container}>
+    return (<form onMouseDown={event => event.stopPropagation()} style={{ width: info.width }} onSubmit={onSubmit} ref={formRef} className={styles.container}>
         <p className={styles.form__title}>{info.title}</p>
         {info.content.map((componentInfo, index) =>
             getComponent(componentInfo, index)

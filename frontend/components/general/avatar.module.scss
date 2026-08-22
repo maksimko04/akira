@@ -7,6 +7,7 @@
   transition: transform 0.2s ease;
   width: auto;
   flex-shrink: 0;
+  transform-origin: center center;
 }
 
 .avatar__image {
@@ -51,7 +52,7 @@
 }
 
 .interactive:hover {
-  transform: scale(1.03);
+  scale: 1.03;
 
   .avatar__overlay {
     opacity: 1;
