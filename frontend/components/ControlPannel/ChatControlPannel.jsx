@@ -12,6 +12,7 @@ import { checkRight, rights, strengthOfRole } from "../../shared/ChatRights";
 import UserApi from "../../api/UserApi";
 import { Xmark } from "@gravity-ui/icons";
 import { Icon } from "@gravity-ui/uikit";
+import typesChat from "../../constants/typesChat";
 
 const createAddMembersModal = ({ setSelectedChat, selectedChat, setActiveModal, createToast }) => ({
     submitText: "Add",
@@ -128,9 +129,11 @@ export default (props) => {
         }
     }
 
+    const getStorage = (type) => type === typesChat.PRIVATE ? avatarsStorage : groupAvatarsStorage;
+
     return (createPortal(<div onMouseDown={(event) => {event.stopPropagation()}} className={styles.container}>
         <div className={styles.general__info}>
-            <Avatar outClassName={styles.chat__avatar} onlyView={true} defaultImage={selectedChat.avatar && groupAvatarsStorage + selectedChat.avatar}
+            <Avatar outClassName={styles.chat__avatar} zonlyView={true} defaultImage={selectedChat.avatar && getStorage(selectedChat.type) + selectedChat.avatar}
                 additionalInfo={selectedChat.title} fontSize="36px" height="65%" />
             <div className={styles.text__general__info}>
                 <p className={styles.title}>{selectedChat.title}</p>
