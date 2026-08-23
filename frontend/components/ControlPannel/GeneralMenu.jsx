@@ -2,7 +2,6 @@ import { forwardRef } from "react";
 import UserApi from "../../api/UserApi";
 import styles from "./generalMenu.module.scss";
 import { useChat } from "../../providers/ChatContext";
-import Modal from "../general/Modal";
 import ChatApi from "../../api/ChatApi";
 import typesChat from "../../constants/typesChat";
 import { useToast } from "@/providers/toastProvider";

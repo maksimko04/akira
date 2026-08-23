@@ -13,12 +13,13 @@ const messageSchema = z.object({
     chatId: z.string().regex(mongoIdRegex, "INVALID_ID"),
     text: z.string(),
     replied: z.string().regex(mongoIdRegex, "INVALID_ID").optional(),
+    attachments: z.array(z.string()).optional()
 });
 
 const messageEditSchema = z.object({
     text: z.string(),
     messageId: z.string().regex(mongoIdRegex, "INVALID_ID"),
-    chatId: z.string().regex(mongoIdRegex, "INVALID_ID")
+    chatId: z.string().regex(mongoIdRegex, "INVALID_ID"),
 });
 
 const userIdSchema = z.object({
@@ -55,9 +56,9 @@ export default (io, socket) => {
 
     socket.on("send_message", async (data, callback) => {
         try {
-            const { chatId, text, replied } = messageSchema.parse(data);
+            const { chatId, text, replied, attachments } = messageSchema.parse(data);
 
-            const message = await MessagesService.createMessage({ chatId, text, replied, authorId: socket.user.id });
+            const message = await MessagesService.createMessage({ chatId, text, replied, authorId: socket.user.id, attachments });
 
             io.to(`chat_${chatId}`).except(socket.id).emit("receive_message", message);
 

@@ -17,3 +17,9 @@ export const uploadAvatarMiddleware = multer({
     fileSize: 5 * 1024 * 1024, // Максимум 5 MB
   },
 }).single('avatar'); // Назва поля у FormData
+
+export const uploadFilesMiddleware = multer({
+  storage,
+  fileFilter,
+  limits: { fileSize: 10 * 1024 * 1024 },
+}).array('attachments', 10);

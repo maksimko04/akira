@@ -118,7 +118,7 @@ export default (props) => {
     }
 
 
-    return (<header onClick={(event) => {event.stopPropagation(); setIsControlPanelOpen(prev => !prev)}} className={styles.header}>
+    return (<header onMouseDown={event => event.stopPropagation()} onClick={() => { setIsControlPanelOpen(prev => !prev) }} className={styles.header}>
         <div className={styles.text__info}>
             <p className={styles.title}>{selectedChat.title}</p>
             <p className={styles.additional__info}>{additionalInfo}</p>

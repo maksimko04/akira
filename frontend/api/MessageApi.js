@@ -32,6 +32,10 @@ class MessageApi {
     async deleteMessage(messageId){
         return await api.delete(`/message/${messageId}`)
     }
+
+    async uploadAttachments(formData){
+        return await api.post("/message/upload-attachments", formData);
+    }
 }
 
 export default new MessageApi();

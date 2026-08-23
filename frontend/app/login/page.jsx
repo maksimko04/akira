@@ -5,7 +5,6 @@ import styles from "./styles.module.scss"
 import UserApi from "@/api/UserApi";
 import { useRef } from "react";
 import { emailRegex, passwordRegex } from "@/constants/regexes";
-import responseStatuses from "@/constants/responseStatuses";
 import { useToast } from "@/providers/toastProvider"
 import typesToast from "@/constants/typesToast";
 import { useAuthStore } from "../../store/useAuthStore";

@@ -1,15 +1,23 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import styles from "./modal.module.scss"
 import Avatar from "./Avatar";
-import UserApi from "../../api/UserApi";
-import { avatarsStorage } from "../../constants/fileBackets";
 import UserSearch from "../UserSearch/UserSearch";
+import { createPortal } from "react-dom";
+import { useChat } from "../../providers/ChatContext";
 
 export default (props) => {
-    const { info } = props;
+    const { info, portalNodeRef } = props;
 
     const formRef = useRef(null);
     const usersRef = useRef(null);
+
+    const {addModalSetter, setActiveModal} = useChat();
+
+    useEffect(() => {
+        const unsubscribe = addModalSetter(setActiveModal);
+
+        return unsubscribe;
+    }, []);
 
     const onSubmit = e => {
         e.preventDefault();
@@ -64,11 +72,11 @@ export default (props) => {
         }
     }
 
-    return (<form onMouseDown={event => event.stopPropagation()} style={{ width: info.width }} onSubmit={onSubmit} ref={formRef} className={styles.container}>
+    return createPortal((<form onMouseDown={event => event.stopPropagation()} style={{ width: info.width }} onSubmit={onSubmit} ref={formRef} className={styles.container}>
         <p className={styles.form__title}>{info.title}</p>
         {info.content.map((componentInfo, index) =>
             getComponent(componentInfo, index)
         )}
         <button type="submit">{info.submitText}</button>
-    </form>);
+    </form>), portalNodeRef.current);
 }

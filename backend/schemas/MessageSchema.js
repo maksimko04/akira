@@ -8,7 +8,9 @@ const Message = new mongoose.Schema({
     },
     text: {
         type: String,
-        required: true
+        required: function() {
+            return !this.attachments || this.attachments.length === 0;
+        }
     },
     replied: {
         type: mongoose.Schema.Types.ObjectId,

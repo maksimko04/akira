@@ -2,15 +2,26 @@ import checkRoleMiddleware from "../middleware/CheckRoleMiddleware.js";
 import MessagesService from "../services/MessagesService.js";
 import { Router } from "express";
 import { messagePaginationValidator, patternMessageValidator, repliedValidator, textValidator } from "../validation/MessageValidator.js";
-import Roles from "../models/Roles.js";
 import { finalValidator as validator } from "../validation/Validator.js"
-import { idBodyValidator, idPathValidator, idQueryValidator } from "../validation/GeneralValidator.js";
+import { idPathValidator, idQueryValidator } from "../validation/GeneralValidator.js";
 import CheckAuthorization from "../middleware/CheckAuthorization.js";
 import ResponseService from "../services/ResponseService.js";
+import MinioService from "../services/MinioService.js";
+import { uploadFilesMiddleware } from "../middleware/Upload.js";
 
 const router = new Router();
 
 const catchAsync = (fn) => (req, res, next) => fn(req, res, next).catch(next);
+
+router.post("/upload-attachments",
+    uploadFilesMiddleware,
+    CheckAuthorization,
+    catchAsync(async (req, res) => {
+        const attachments = await MinioService.uploadFiles(req.files, "chat-attachments");
+
+        ResponseService.success(res, {attachments});
+    })
+);
 
 router.get("/:id",
     CheckAuthorization,

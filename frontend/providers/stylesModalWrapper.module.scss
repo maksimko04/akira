@@ -1,8 +1,13 @@
-.shadow {
+.wrapper {
     z-index: 10;
-
     position: fixed;
     inset: 0;
+    background: transparent;
+    pointer-events: none;
+}
+
+.wrapper:has(*) {
     background-color: color-mix(in srgb, #000000 50%, transparent);
     backdrop-filter: blur(2px);
+    pointer-events: all;
 }

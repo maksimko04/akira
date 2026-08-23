@@ -1,4 +1,5 @@
 import Chat from "../schemas/ChatSchema.js";
+import Message from "../schemas/MessageSchema.js"
 import chatTypes from "../models/ChatTypes.js";
 import ApiError from "../models/ApiError.js";
 import MemberRoles from "../models/MemberRoles.js";
@@ -355,8 +356,9 @@ class ChatService {
 
         if (member.role !== MemberRoles.OWNER) {
             throw ApiError.badRequest("USER_NOT_OWNER");
-            return;
         }
+
+        Message.deleteMany({ chatId });
 
         return await Chat.findByIdAndDelete(chatId);
     }
@@ -402,7 +404,7 @@ class ChatService {
 
         const member = this.findMember(chat, actorId);
 
-        if(chat.type === chatTypes.PRIVATE){
+        if (chat.type === chatTypes.PRIVATE) {
             throw ApiError.badRequest();
         }
 
@@ -529,6 +531,7 @@ class ChatService {
         }
 
         chat.members = chat.members.filter(member => member.user.toString() !== actorId);
+
         return await chat.save();
     }
 

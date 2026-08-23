@@ -28,6 +28,10 @@ class MessagesService {
             }
         }
 
+        if(!text && (!attachments || attachments.length === 0)){
+            throw ApiError.badRequest();
+        }
+
         const message = await Message.create({
             chat: chatId,
             author: authorId,

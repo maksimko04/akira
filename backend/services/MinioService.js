@@ -50,6 +50,42 @@ class MinioService {
             // console.error(`Помилка видалення файлу ${fileName} з MinIO:`, error);
         }
     }
+
+    async uploadFiles(files, bucketName) {
+        if (!files || files.length === 0) return [];
+
+        const uploadPromises = files.map(async (file) => {
+            const isImage = file.mimetype.startsWith('image/');
+            let finalBuffer = file.buffer;
+            let fileName;
+            let contentType = file.mimetype;
+
+            if (isImage) {
+                fileName = `${uuidv4()}.webp`;
+                contentType = 'image/webp';
+
+                finalBuffer = await sharp(file.buffer)
+                    .resize(1920, 1920, { fit: 'inside', withoutEnlargement: true })
+                    .webp({ quality: 80 })
+                    .toBuffer();
+            } else {
+                const extension = file.originalname.split('.').pop() || 'bin';
+                fileName = `${uuidv4()}.${extension}`;
+            }
+
+            await this.client.putObject(
+                bucketName,
+                fileName,
+                finalBuffer,
+                finalBuffer.length,
+                { 'Content-Type': contentType }
+            );
+
+            return fileName;
+        });
+
+        return Promise.all(uploadPromises);
+    }
 }
 
 export default new MinioService();

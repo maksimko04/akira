@@ -1,66 +1,151 @@
 .message {
-    --own-color: var(--vidget-color1);
+  --max-width-message: 350px;
 
-    background-color: var(--vidget-color1);
-    min-width: 40px;
-    max-width: 350px;
-    width: fit-content;
-    padding-bottom: 5px;
-    margin-top: 10px;
-    border-radius: var(--border-radius);
+  background-color: var(--vidget-color1);
+  min-width: 40px;
+  max-width: var(--max-width-message);
+  width: fit-content;
+  margin-top: 10px;
+  border-radius: var(--border-radius);
+  position: relative;
 }
 
 .author {
-    margin: 10px;
-    margin-bottom: 0;
-    color: var(--author-color);
+  margin: 10px;
+  margin-bottom: 0;
+  color: var(--author-color);
 }
 
 .my__message {
-    margin-left: auto;
+  margin-left: auto;
 }
 
-.other__message {}
-
 .replied__section {
-    background-color: var(--vidget-color3);
-    padding: 10px;
-    border-radius: var(--border-radius);
-    border: var(--vidget-color1) 5px solid;
-    border-bottom: none;
-    cursor: pointer;
+  background-color: var(--vidget-color3);
+  padding: 10px;
+  border-radius: var(--border-radius);
+  border: var(--vidget-color1) 5px solid;
+  border-bottom: none;
+  cursor: pointer;
 }
 
 .original__author {
-    color: var(--author-color)
+  color: var(--author-color);
 }
 
 .original__text {
-    font-size: 14px;
-    margin-top: 5px;
+  font-size: 14px;
+  margin-top: 5px;
 }
 
 .content__message {
-    display: flex;
-    gap: 5px;
-    padding-left: 10px;
-    padding-right: 10px;
-    margin-top: 5px;
+  display: flex;
+  gap: 5px;
+  padding-left: 10px;
+  padding-right: 10px;
+  margin-top: 5px;
+  margin-bottom: 5px;
 }
 
-.content__message > *:nth-child(2){
-    margin-left: auto;
-    padding-left: 5px;
+.content__message>*:nth-child(2) {
+  margin-left: auto;
+  padding-left: 5px;
 }
 
 .text {
-    margin-bottom: 3px;
+  margin-bottom: 3px;
 }
 
 .mark_info {
-    font-size: 12px;
-    margin-top: auto;
-    display: block;
-    width: min-content;
-    color: gray;
+  font-size: 12px;
+  margin-top: auto;
+  display: block;
+  width: min-content;
+  color: gray;
 }
+
+.attachment {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  display: block;
+
+  img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+  }
+}
+
+.attachments__container {
+  display: grid;
+  gap: 4px;
+  max-width: var(--max-width-message);
+  width: fit-content;
+  border-radius: 12px;
+  overflow: hidden;
+
+  &:has(.attachment:only-child) {
+    grid-template-columns: 1fr;
+
+    .attachment {
+      width: 100%;
+      height: auto;
+
+      img {
+        width: 100%;
+        height: auto;
+        max-height: 380px;
+        aspect-ratio: auto;
+        object-fit: contain;
+      }
+    }
+  }
+
+  &:has(.attachment:nth-child(2)):not(:has(.attachment:nth-child(3))) {
+    grid-template-columns: repeat(2, 1fr);
+
+    .attachment {
+      height: auto;
+      aspect-ratio: 4 / 3;
+    }
+  }
+
+  &:has(.attachment:nth-child(3)):not(:has(.attachment:nth-child(4))) {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+
+    .attachment:first-child {
+      grid-row: span 2;
+      height: 100%;
+    }
+
+    .attachment:not(:first-child) {
+      height: auto;
+      aspect-ratio: 1 / 1;
+    }
+  }
+
+  &:has(.attachment:nth-child(4)) {
+    grid-template-columns: repeat(2, 1fr);
+
+    .attachment {
+      height: auto;
+      aspect-ratio: 1 / 1;
+    }
+  }
+}
+
+.additional__info__on__attachment {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  background-color: color-mix(in srgb, var(--vidget-color3) 50%, transparent);
+  border-radius: var(--border-radius);
+  padding: 5px;
+}
+
+.additional__info__on__attachment * {
+  color: var(--text-color);
+} 

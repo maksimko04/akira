@@ -303,8 +303,6 @@ option:checked {
 }
 
 .button__wrapper {
-  background: transparent !important;
-  width: min-content !important;
-  height: min-content !important;
+  background: transparent;
   color: var(--text-color);
 }

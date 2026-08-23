@@ -4,11 +4,11 @@ import { createPortal } from 'react-dom';
 import styles from "./chatControlPannel.module.scss";
 import Avatar from "../general/Avatar";
 import { avatarsStorage, groupAvatarsStorage } from "../../constants/fileBackets";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ChatApi from "../../api/ChatApi";
 import { useToast } from "@/providers/toastProvider"
 import typesToast from "@/constants/typesToast";
-import { checkRight, rights, strengthOfRole } from "../../shared/ChatRights";
+import { strengthOfRole } from "../../shared/ChatRights";
 import UserApi from "../../api/UserApi";
 import { Xmark } from "@gravity-ui/icons";
 import { Icon } from "@gravity-ui/uikit";

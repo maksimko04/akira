@@ -1,0 +1,61 @@
+.container {
+    display: flex;
+    inset: 0;
+    position: absolute;
+    justify-content: center;
+    align-items: center;
+    pointer-events: none;
+}
+
+.container * {
+    pointer-events: all;
+}
+
+.image {
+    max-height: 70%;
+    max-width: 70%;
+    object-fit: contain;
+    width: auto;
+    height: auto;
+}
+
+.images__list {
+    display: flex;
+    gap: 10px;
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    translate: -50%;
+    height: 60px;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    align-items: stretch;
+}
+
+.images__list > div:hover {
+    filter: brightness(0.7);
+}
+
+.image__item {
+    object-fit: cover;
+    aspect-ratio: 1 / 1;
+    height: 100%;
+}
+
+.left__arrow {
+    position: absolute;
+    left: 20px;
+    translate: 0 -50%;
+    top: 50%;
+    border-radius: 100%;
+    overflow: hidden;
+}
+
+.right__arrow {
+    position: absolute;
+    right: 20px;
+    translate: 0 -50%;
+    top: 50%;
+    border-radius: 100%;
+    overflow: hidden;
+}

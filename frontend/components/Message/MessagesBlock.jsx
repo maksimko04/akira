@@ -9,57 +9,60 @@ import SpecialMessage from "./SpecialMessage";
 import ContextMenu from "@/components/general/ContextMenu.jsx";
 import messageActions from "../../constants/messageActions.js";
 import { checkRight, rights } from "../../shared/ChatRights.js";
+import ImageViewer from "../Tools/ImageViewer.jsx";
 
 const contextMenuActions = [
     {
         text: "Edit",
-        hideWhen: (user, {message, myMember}) => {
+        hideWhen: (user, { message, myMember }) => {
             return user !== message.author._id || !checkRight(myMember, rights.MEMBER.EDIT_OWN_MESSAGES);
         },
 
-        action: ({message, setTargetMessage, textMessageRef}) => {
+        action: ({ message, setTargetMessage, textMessageRef }) => {
             textMessageRef.current.focus();
             textMessageRef.current.value = message.text;
             setTargetMessage({
                 action: messageActions.edit,
                 messageId: message._id,
                 description: "Edit message",
-                text: message.text
+                text: message.text,
+                attachments: message.attachments
             });
         }
     },
     {
         text: "Copy message",
-        action: ({message}) => {
+        action: ({ message }) => {
             navigator.clipboard.writeText(message.text);
         }
     },
     {
         text: "Reply",
-        hideWhen: (user, {myMember}) => {
+        hideWhen: (user, { myMember }) => {
             return !checkRight(myMember, rights.MEMBER.SEND_MESSAGES);
         },
-        action: ({message, setTargetMessage, textMessageRef}) => {
+        action: ({ message, setTargetMessage, textMessageRef }) => {
             textMessageRef.current.focus();
             setTargetMessage({
                 action: messageActions.reply,
                 messageId: message._id,
                 description: `Reply to ${message.author.name}`,
-                text: message.text
+                text: message.text,
+                attachments: message.attachments
             });
         }
     },
     {
         text: "Delete",
-        hideWhen: (user, {message, myMember}) => {
-            if(message.author._id === user){
+        hideWhen: (user, { message, myMember }) => {
+            if (message.author._id === user) {
                 return !checkRight(myMember, rights.MEMBER.DELETE_OWN_MESSAGES);
             }
             return !checkRight(myMember, rights.ADMIN.DELETE_MESSAGES);
         },
-        action: ({message, setTargetMessage, textMessageRef, socket, setMessages}) => {
-            socket.emit("delete_message", {messageId: message._id}, (response) => {
-                if(response.success){
+        action: ({ message, setTargetMessage, textMessageRef, socket, setMessages }) => {
+            socket.emit("delete_message", { messageId: message._id }, (response) => {
+                if (response.success) {
                     setMessages(prev => prev.filter(messageInList => messageInList._id !== message._id));
                 }
             });
@@ -68,13 +71,27 @@ const contextMenuActions = [
 ];
 
 export default () => {
-    const { messages, setMessages, selectedChat, messageBlockRef, setTargetMessage, textMessageRef, socket } = useChat();
+    const {
+        messages,
+        setMessages,
+        selectedChat,
+        messageBlockRef,
+        setTargetMessage,
+        textMessageRef,
+        socket,
+        portalNodeRef
+    } = useChat();
+
     const [infoContextMenu, setInfoContextMenu] = useState(null);
+
+    const [imageViewer, setImageViewer] = useState(null);
 
     const topSentinelRef = useRef(null);
     const bottomSentielRef = useRef(null);
 
     const offsetScroll = useRef(null);
+
+    const messageFeaturesRef = useRef(new Map());
 
     const openContextMenu = (event, message) => {
         event.preventDefault();
@@ -95,7 +112,7 @@ export default () => {
         });
     }
 
-    const closeContextMenu = (event) => {
+    const closeContextMenu = () => {
         setInfoContextMenu(null);
     }
 
@@ -175,6 +192,43 @@ export default () => {
 
     let date = GetFormatDate(messages?.[0]?.createdAt);
 
+    const hasImages = (before) => {
+        const start = before ? messages.length - 1 : 0;
+        const end = before ? -1 : messages.length;
+        const step = before ? -1 : 1;
+
+        let imagesFound = false;
+        for (let i = start; i !== end; i += step) {
+            const msg = messages[i];
+            if(msg._id === imageViewer.id){
+                return imagesFound;
+            }
+            if(messageFeaturesRef.current.get(msg._id)?.hasImages()){
+                imagesFound = true;
+            }
+        }
+
+        return false;
+    }
+
+    const switchImages = (before) => {
+        const start = before ? messages.length - 1 : 0;
+        const end = before ? -1 : messages.length;
+        const step = before ? -1 : 1;
+
+        let necessaryMessage = null;
+        for (let i = start; i !== end; i += step) {
+            const msg = messages[i];
+            if(msg._id === imageViewer.id){
+                messageFeaturesRef.current.get(necessaryMessage).openImageViewer();
+                return;
+            }
+            if(messageFeaturesRef.current.get(msg._id)?.hasImages()){
+                necessaryMessage = msg._id;
+            }
+        }
+    }
+
     return (<> <div ref={messageBlockRef} className={styles.container}>
         <div ref={bottomSentielRef} style={{ height: '1px' }}></div>
         {messages.map((message, index) => {
@@ -185,15 +239,24 @@ export default () => {
                 date = messageDate;
             }
             return <Fragment key={message._id}>
-                <Message onContextMenu={openContextMenu} message={message} />
-                {showDate && <SpecialMessage text={showDate}/>}
+                <Message ref={(el) => {
+                    if (el) {
+                        messageFeaturesRef.current.set(message._id, el);
+                    }
+                    else {
+                        messageFeaturesRef.current.delete(message._id);
+                    }
+                }} onContextMenu={openContextMenu} message={message} imageViewer={imageViewer} setImageViewer={setImageViewer} />
+                {showDate && <SpecialMessage text={showDate} />}
             </ Fragment>
         })}
         <div ref={topSentinelRef} style={{ height: '1px' }} />
     </div>
         {
             infoContextMenu &&
-            <ContextMenu actions={contextMenuActions} info={infoContextMenu} />
+            <ContextMenu actions={contextMenuActions} info={infoContextMenu} close={() => setInfoContextMenu(null)} />
         }
+        {imageViewer && <ImageViewer portalNodeRef={portalNodeRef} switchImages={switchImages}
+            info={imageViewer} setImageViewer={setImageViewer} hasImages={hasImages} />}
     </>)
 };

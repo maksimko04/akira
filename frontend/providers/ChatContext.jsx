@@ -1,4 +1,4 @@
-import { createContext, useContext, useDebugValue, useState } from "react";
+import { createContext, forwardRef, useContext, useDebugValue, useState } from "react";
 import MessageApi from "../api/MessageApi";
 import { useEffect } from "react";
 import { io, Socket } from 'socket.io-client';
@@ -11,14 +11,31 @@ import useMe from "../hooks/useMe";
 import { useAuthStore } from "../store/useAuthStore";
 import UserApi from "../api/UserApi";
 import { useRouter } from "next/navigation"
-import Modal from "../components/general/Modal";
-import Shadow from "../components/general/Shadow";
 import { checkRight, rights } from "../shared/ChatRights";
+import { useToast } from "@/providers/toastProvider";
+import stylesModalWrapper from "./stylesModalWrapper.module.scss";
+import Modal from "../components/general/Modal";
 
 const ChatContext = createContext(null);
 
 const SERVER_URL = process.env.NEXT_PUBLIC_SERVER_URL;
 let socket;
+
+const ModalWrapper = forwardRef((props, ref) => {
+    const {modalSetters} = props;
+
+    const onMouseDown = (event) => {
+        event.stopPropagation();
+
+        modalSetters.current.forEach(setter => setter(null));
+    }
+
+    return (
+        <div onMouseDown={onMouseDown} ref={ref} className={stylesModalWrapper.wrapper}>
+            
+        </div>
+    )
+});
 
 export const ChatProvider = ({ children }) => {
     const [messages, setMessages] = useState([]);
@@ -30,10 +47,19 @@ export const ChatProvider = ({ children }) => {
     const [chats, setChats] = useState([]);
     const logoutFromStore = useAuthStore(state => state.logout);
     const [activeModal, setActiveModal] = useState(null);
+    const portalNodeRef = useRef(null);
+    const modalSetters = useRef(new Set());
+
+    const addModalSetter = (setter) => {
+        modalSetters.current.add(setter);
+
+        return () => modalSetters.current.delete(setter);
+    }
 
     const [me, loading] = useMe();
 
     const router = useRouter();
+    const createToast = useToast();
 
     const getMyMember = (chat) => {
         for (const member of chat.members) {
@@ -95,13 +121,36 @@ export const ChatProvider = ({ children }) => {
         }
     };
 
-    const sendMessage = (text) => {
+    const sendMessage = async (text, files) => {
         if (!selectedChat) {
             return;
         }
+
+        let attachments = [];
+        if (files && files.length !== 0) {
+            let formData = new FormData();
+
+            files.forEach(item => {
+                formData.append('attachments', item.file || item);
+            });
+
+            try {
+                const response = await MessageApi.uploadAttachments(formData);
+                if(response.data.attachments.length !== 0){
+                    attachments = response.data.attachments;
+                }
+            }
+            catch {
+                createToast(typesToast.error, "files not uploaded");
+            }
+        }
+
         switch (targetMessage?.action) {
             case messageActions.edit: {
-                socket.emit("edit_message", { chatId: selectedChat._id, messageId: targetMessage.messageId, text }, (response) => {
+                if((!text || text === "") && targetMessage.attachments.length === 0){
+                    return;
+                }
+                socket.emit("edit_message", { chatId: selectedChat._id, messageId: targetMessage.messageId, text, attachments }, (response) => {
                     if (!response || !response.success) {
                         return;
                     }
@@ -115,7 +164,10 @@ export const ChatProvider = ({ children }) => {
                 break;
             };
             default: {
-                socket.emit("send_message", { chatId: selectedChat._id, text, replied: targetMessage?.messageId }, (response) => {
+                if((!text || text === "") && (attachments.length === 0)){
+                    return;
+                }
+                socket.emit("send_message", { chatId: selectedChat._id, text, replied: targetMessage?.messageId, attachments }, (response) => {
                     if (response && response.success) {
                         setMessages(prev => [response.message, ...prev]);
                     }
@@ -132,7 +184,6 @@ export const ChatProvider = ({ children }) => {
 
     const focusOnMessage = async (messageId) => {
         let message = document.getElementById(`message-${messageId}`);
-        let needDeleteTemporaryMessages = false;
         if (!message) {
             const response = await MessageApi.getMessages(selectedChat._id, {
                 direction: "both",
@@ -149,7 +200,6 @@ export const ChatProvider = ({ children }) => {
                 );
                 combinedMassages.sort((message1, message2) => message1._id < message2._id);
                 setMessages(combinedMassages);
-                needDeleteTemporaryMessages = true;
             }
         }
         setFocusedMessage(messageId);
@@ -190,15 +240,15 @@ export const ChatProvider = ({ children }) => {
         socket.on("chat_changed", chat => {
             setChats(prev => {
                 return prev.map(chatTemp => {
-                    if(chatTemp._id !== chat._id){
+                    if (chatTemp._id !== chat._id) {
                         return chatTemp;
                     }
 
-                    return {...chat, lastMessage: chatTemp.lastMessage}; 
+                    return { ...chat, lastMessage: chatTemp.lastMessage };
                 })
             });
 
-            setSelectedChat(prev => prev._id === chat._id ? ({...chat, myMember: prev.myMember}) : prev);
+            setSelectedChat(prev => prev._id === chat._id ? ({ ...chat, myMember: prev.myMember }) : prev);
         })
 
         socket.on("last_message_updated", ({ chatId, messageText, isChatActivity }) => {
@@ -334,13 +384,13 @@ export const ChatProvider = ({ children }) => {
             setChats,
             logout,
             activeModal,
-            setActiveModal
+            setActiveModal,
+            portalNodeRef,
+            addModalSetter
         }}>
             {children}
-            {activeModal && <>
-                <Modal info={activeModal} />
-                <Shadow callback={() => { setActiveModal(null) }} />
-            </>}
+            <ModalWrapper modalSetters={modalSetters} ref={portalNodeRef}></ModalWrapper>
+            {activeModal && <Modal info={activeModal} portalNodeRef={portalNodeRef} />}
         </ChatContext.Provider>
     );
 }
