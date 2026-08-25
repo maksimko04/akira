@@ -22,7 +22,7 @@ const SERVER_URL = process.env.NEXT_PUBLIC_SERVER_URL;
 let socket;
 
 const ModalWrapper = forwardRef((props, ref) => {
-    const {modalSetters} = props;
+    const { modalSetters } = props;
 
     const onMouseDown = (event) => {
         event.stopPropagation();
@@ -32,7 +32,7 @@ const ModalWrapper = forwardRef((props, ref) => {
 
     return (
         <div onMouseDown={onMouseDown} ref={ref} className={stylesModalWrapper.wrapper}>
-            
+
         </div>
     )
 });
@@ -136,7 +136,7 @@ export const ChatProvider = ({ children }) => {
 
             try {
                 const response = await MessageApi.uploadAttachments(formData);
-                if(response.data.attachments.length !== 0){
+                if (response.data.attachments.length !== 0) {
                     attachments = response.data.attachments;
                 }
             }
@@ -147,7 +147,7 @@ export const ChatProvider = ({ children }) => {
 
         switch (targetMessage?.action) {
             case messageActions.edit: {
-                if((!text || text === "") && targetMessage.attachments.length === 0){
+                if ((!text || text === "") && targetMessage.attachments.length === 0) {
                     return;
                 }
                 socket.emit("edit_message", { chatId: selectedChat._id, messageId: targetMessage.messageId, text, attachments }, (response) => {
@@ -164,7 +164,7 @@ export const ChatProvider = ({ children }) => {
                 break;
             };
             default: {
-                if((!text || text === "") && (attachments.length === 0)){
+                if ((!text || text === "") && (attachments.length === 0)) {
                     return;
                 }
                 socket.emit("send_message", { chatId: selectedChat._id, text, replied: targetMessage?.messageId, attachments }, (response) => {
@@ -358,6 +358,15 @@ export const ChatProvider = ({ children }) => {
             textMessageRef.current.focus();
         }
     }, [selectedChat?._id]);
+
+    useEffect(() => {
+        setChats(prev => prev.map(chat => {
+            if(chat._id === selectedChat._id){
+                return selectedChat;
+            }
+            return chat;
+        }));
+    }, [selectedChat]);
 
     const logout = async () => {
         const response = await UserApi.logout();

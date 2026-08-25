@@ -33,6 +33,10 @@ class ChatApi {
     async leaveChat(chatId){
         return await api.delete(`/chat/leave-chat/${chatId}`);
     }
+
+    async editChat(chatId, body){
+        return await api.put(`/chat/edit/${chatId}`, body);
+    }
 }
 
 export default new ChatApi();

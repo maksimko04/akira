@@ -85,12 +85,16 @@ router.delete("/:id", CheckAuthorization,
     })
 )
 
-router.put("/edit/:id", CheckAuthorization,
+router.put("/edit/:id", 
+    uploadAvatarMiddleware,
+    CheckAuthorization,
     idPathValidator(),
     titleValidator(true),
     validator,
     catchAsync(async (req, res, next) => {
-        const chat = await ChatService.editInfoGroup(req.user.id, req.params.id, req.body);
+        const {...info} = req.body;
+        info.avatar = req.file?.buffer;
+        const chat = await ChatService.editInfoGroup(req.user.id, req.params.id, info);
 
         responseService.success(res, { chat });
     })

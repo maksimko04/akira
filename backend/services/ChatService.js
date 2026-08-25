@@ -364,7 +364,7 @@ class ChatService {
     }
 
     async editInfoGroup(actorId, chatId, info) {
-        const chat = getChat(chatId);
+        const chat = await this.getChat(chatId);
         if (!chat) {
             throw ApiError.badRequest("CHAT_NOT_EXISTS");
         }
@@ -381,6 +381,17 @@ class ChatService {
 
         if (!this.checkRight(member, MemberRights.MEMBER.CHANGE_GROUP_INFO)) {
             throw ApiError.forbidden();
+        }
+
+        if (info.avatar) {
+            try {
+                const imageName = await MinioService.saveImage(info.avatar, "group-avatars");
+
+                info.avatar = imageName;
+            }
+            catch (err) {
+                delete info.avatar;
+            }
         }
 
         for (const key in info) {

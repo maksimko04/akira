@@ -44,14 +44,61 @@ const createAddMembersModal = ({ setSelectedChat, selectedChat, setActiveModal, 
     }
 });
 
+const createEditChatModal = ({ setSelectedChat, selectedChat, setActiveModal, createToast, setChats }) => ({
+    submitText: "Edit",
+
+    title: "Edit chat",
+    width: "600px",
+
+    content: [
+        {
+            type: "combined",
+            inside: [
+                {
+                    type: "file",
+                    name: "avatar",
+                    height: "150px",
+                    defaultImage: (selectedChat.avatar ? groupAvatarsStorage + selectedChat.avatar : null),
+                    additionalInfo: selectedChat.title,
+                },
+                {
+                    type: "input",
+                    name: "Group title",
+                    key: "title",
+                    placeholder: selectedChat.title,
+                    maxLength: 25,
+                },
+            ]
+        },
+    ],
+
+    callback: async (data, formData) => {
+        try {
+            const response = await ChatApi.editChat(selectedChat._id, formData);
+
+            console.log(response);
+
+            setSelectedChat(prev => ({ ...prev, ...response.data.chat }));
+
+            createToast(typesToast.success, "chat is successfully edited");
+
+            setActiveModal(null);
+        }
+        catch (err) {
+            console.log(err)
+            createToast();
+        }
+    }
+});
+
 const actions = [
     {
         title: "Change group info",
         hideWhen: (info) => {
             return info.selectedChat.type === typesChat.PRIVATE;
         },
-        callback: () => {
-
+        callback: (info) => {
+            info.setActiveModal(createEditChatModal(info));
         }
     },
     {
@@ -67,7 +114,7 @@ const actions = [
 
 export default (props) => {
     const { setIsControlPanelOpen } = props;
-    const { selectedChat, setSelectedChat, setActiveModal } = useChat();
+    const { selectedChat, setSelectedChat, setActiveModal, setChats } = useChat();
     const [membersDetail, setMembersDetail] = useState([]);
     const createToast = useToast();
     const membersDetailsInitialized = useRef(false);
@@ -141,7 +188,8 @@ export default (props) => {
         selectedChat,
         setActiveModal,
         createToast,
-        setSelectedChat
+        setSelectedChat,
+        setChats
     };
 
     return (createPortal(<div onMouseDown={(event) => { event.stopPropagation() }} className={styles.container}>
@@ -178,14 +226,14 @@ export default (props) => {
                 </div>
             )}
         </ul>
-        {selectedChat.type === typesChat.PRIVATE && <p style={{padding: "5px"}}>
+        {selectedChat.type === typesChat.PRIVATE && <p style={{ padding: "5px" }}>
             Очікуйте на нові оновлення...
-            <br/>
+            <br />
             А якщо хочете побачити тут щось більш осмислене то дивіться в групах, а не в лс
-            <br/>
-            <br/>
-                
+            <br />
+            <br />
+
             <i>Ваш улюблений @maksimko04</i>
-            </p>}
+        </p>}
     </div>, document.body));
 }

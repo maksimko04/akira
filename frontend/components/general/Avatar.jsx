@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import styles from "./avatar.module.scss";
 
@@ -38,6 +38,10 @@ export default (props) => {
     };
 
     let avatarContent;
+
+    useEffect(() => {
+        setPreview(defaultImage);
+    }, [defaultImage]);
 
     if(preview){
         avatarContent = (<img src={preview} alt="Avatar" className={styles.avatar__image} />);
