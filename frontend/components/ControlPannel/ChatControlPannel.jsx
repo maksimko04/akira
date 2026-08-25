@@ -178,5 +178,14 @@ export default (props) => {
                 </div>
             )}
         </ul>
+        {selectedChat.type === typesChat.PRIVATE && <p style={{padding: "5px"}}>
+            Очікуйте на нові оновлення...
+            <br/>
+            А якщо хочете побачити тут щось більш осмислене то дивіться в групах, а не в лс
+            <br/>
+            <br/>
+                
+            <i>Ваш улюблений @maksimko04</i>
+            </p>}
     </div>, document.body));
 }

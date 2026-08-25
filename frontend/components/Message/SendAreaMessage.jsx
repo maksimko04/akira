@@ -4,7 +4,7 @@ import Image from "next/image";
 import ChatApi from "../../api/ChatApi";
 import typesChat from "../../constants/typesChat";
 
-import { Xmark, File } from "@gravity-ui/icons";
+import { Xmark, File, Plus } from "@gravity-ui/icons";
 import { Icon } from "@gravity-ui/uikit";
 
 import { useChat } from "../../providers/ChatContext";
@@ -71,8 +71,38 @@ export default () => {
         setFiles(prev => prev.filter(file => file.id !== id));
     }
 
+    const loadFileFromButton = (event) => {
+        const file = event.target.files && event.target.files[0];
+        if (file) {
+            const imageUrl = URL.createObjectURL(file);
+
+            setFiles(prev => [
+                ...prev,
+                {
+                    type: file.type.startsWith("image/") ? "image" : "file",
+                    file: file,
+                    image: imageUrl,
+                    title: file.name,
+                    id: Date.now() + prev.length
+                }
+            ]);
+        }
+    }
+
     return (
         <form onSubmit={onSubmit} className={styles.sending__area}>
+            <button type="button" className={`${styles.special__button}`}>
+                <label htmlFor="file__add">
+                    <Icon style={{ ["--height"]: "30px" }} data={Plus} className={`hover__icon ${styles.xmark}`} />
+                </label>
+                <input
+                    id="file__add"
+                    type="file"
+                    accept="image/*"
+                    onChange={loadFileFromButton}
+                    style={{ display: "none" }}
+                />
+            </button>
             <div className={styles.writing__area}>
                 {targetMessage &&
                     <div className={styles.action__description}>
@@ -97,7 +127,7 @@ export default () => {
                 }
                 <input ref={textMessageRef} onPaste={handlePaste} />
             </div>
-            <button className={styles.button__send}>
+            <button className={styles.special__button}>
                 <Image src={sendIcon} alt="sent" />
             </button>
         </form>

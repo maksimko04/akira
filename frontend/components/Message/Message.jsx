@@ -4,6 +4,8 @@ import typesChat from "../../constants/typesChat";
 import useMe from "../../hooks/useMe";
 import { useChat } from "../../providers/ChatContext";
 import styles from "./message.module.scss"
+import { File } from "@gravity-ui/icons";
+import { Icon } from "@gravity-ui/uikit";
 
 const getTimeInDay = (time) => {
     return new Intl.DateTimeFormat('uk-UA', {
@@ -37,11 +39,19 @@ export default forwardRef((props, ref) => {
     const displayAttachment = (attachment, index) => {
         if (attachment.split(".").pop() === "webp") {
             return (<div key={attachment}
-                onClick={() => openImageViewer(images.indexOf(chatAttachmentsStorage + message.attachments.at(index)))}
+                onClick={() => openImageViewer(images.indexOf(chatAttachmentsStorage + attachment))}
                 className={styles.attachment}>
                 <img
                     src={chatAttachmentsStorage + attachment} loading="lazy" />
             </div>)
+        }
+        else{
+            return( <div key={attachment}
+                onClick={() => downloadFile(chatAttachmentsStorage + attachment)}
+                className={styles.attachment}>
+                <Icon style={{ ["--height"]: "60px" }} data={File} className={`hover__icon`} />
+                <p className={styles.truncate__single}>{attachment}</p>
+            </div>);
         }
     }
 

@@ -2,7 +2,7 @@ import multer from 'multer';
 
 const storage = multer.memoryStorage();
 
-const fileFilter = (req, file, cb) => {
+const imageFilter = (req, file, cb) => {
   if (file.mimetype.startsWith('image/')) {
     cb(null, true);
   } else {
@@ -12,7 +12,7 @@ const fileFilter = (req, file, cb) => {
 
 export const uploadAvatarMiddleware = multer({
   storage,
-  fileFilter,
+  imageFilter,
   limits: {
     fileSize: 5 * 1024 * 1024, // Максимум 5 MB
   },
@@ -20,6 +20,5 @@ export const uploadAvatarMiddleware = multer({
 
 export const uploadFilesMiddleware = multer({
   storage,
-  fileFilter,
   limits: { fileSize: 10 * 1024 * 1024 },
 }).array('attachments', 10);
