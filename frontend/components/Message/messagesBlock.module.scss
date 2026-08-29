@@ -7,3 +7,15 @@
     padding-bottom: 110px;
     overflow-anchor: none;
 }
+
+.offset__vertical__context {
+    translate: 0 -100%;
+}
+
+.offset__horizontal__context {
+    translate: -100% 0;
+}
+
+.offset__both__sides__context {
+    translate: -100% -100%;
+}

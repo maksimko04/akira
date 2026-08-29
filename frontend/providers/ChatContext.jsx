@@ -251,6 +251,34 @@ export const ChatProvider = ({ children }) => {
             setSelectedChat(prev => prev._id === chat._id ? ({ ...chat, myMember: prev.myMember }) : prev);
         })
 
+        socket.on("member_info_changed", ({ chatId, member }) => {
+            setSelectedChat(prev => {
+                if (!prev || prev._id !== chatId) return prev;
+
+                return {
+                    ...prev, members: prev.members.map(memberTemp => {
+                        if (member.user === memberTemp.user) {
+                            return member;
+                        }
+                        return memberTemp;
+                    })
+                };
+            });
+
+            setChats(prev => prev.map(chat => {
+                if (!chat || chat._id !== chatId) return chat;
+
+                return {
+                    ...chat, members: chat.members.map(memberTemp => {
+                        if (member.user === memberTemp.user) {
+                            return member;
+                        }
+                        return memberTemp;
+                    })
+                };
+            }))
+        });
+
         socket.on("last_message_updated", ({ chatId, messageText, isChatActivity }) => {
             setChats(prev => {
                 let newChats = prev.map(chat => {
@@ -360,8 +388,11 @@ export const ChatProvider = ({ children }) => {
     }, [selectedChat?._id]);
 
     useEffect(() => {
+        if (!selectedChat) {
+            return;
+        }
         setChats(prev => prev.map(chat => {
-            if(chat._id === selectedChat._id){
+            if (chat._id === selectedChat._id) {
                 return selectedChat;
             }
             return chat;

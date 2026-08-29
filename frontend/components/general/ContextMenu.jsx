@@ -1,8 +1,9 @@
+import { forwardRef } from "react";
 import useMe from "../../hooks/useMe";
 import styles from "./contextMenu.module.scss";
 
-export default (props) => {
-    const { className, actions, info, close } = props;
+export default forwardRef((props, ref) => {
+    const { className="", actions, info, close } = props;
 
     const [user, isLoading] = useMe();
 
@@ -12,7 +13,7 @@ export default (props) => {
         close?.();
     }
 
-    return (<ul style={info.pos ? { ["--x"]: info.pos.x + "px", ["--y"]: info.pos.y + "px" } : {}}
+    return (<ul ref={ref} style={info.pos ? { ["--x"]: info.pos.x + "px", ["--y"]: info.pos.y + "px" } : {}}
         className={`${styles.container} ${className}`}>
         {actions
             .filter(action => !action.hideWhen?.(user, info.data))
@@ -22,4 +23,4 @@ export default (props) => {
                 </button>
             )}
     </ul>);
-}
+});

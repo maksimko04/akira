@@ -9,12 +9,26 @@ import { Icon } from "@gravity-ui/uikit";
 
 import { useChat } from "../../providers/ChatContext";
 import styles from "./sendAreaMessage.module.scss";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
-export default () => {
-    const { selectedChat, socket, targetMessage, textMessageRef, sendMessage } = useChat();
+export default (props) => {
+    const { setIsControlPanelOpen } = props
+
+    const { selectedChat, socket, targetMessage, textMessageRef, sendMessage, openChat, setChats } = useChat();
 
     const [files, setFiles] = useState([]);
+
+    const messageToUncreatedChat = useRef(false);
+
+    useEffect(() => {
+        if (messageToUncreatedChat.current) {
+            sendMessage(textMessageRef.current.value);
+            textMessageRef.current.value = "";
+            messageToUncreatedChat.current = false;
+        }
+
+        setIsControlPanelOpen(false)
+    }, [selectedChat?._id]);
 
     const onSubmit = async event => {
         event.preventDefault();
@@ -28,10 +42,13 @@ export default () => {
                 socket.emit("created_private_chat", { userId: selectedChat.userId });
 
                 openChat(response.data.chat);
+                setChats(prev => [response.data.chat, ...prev]);
 
                 messageToUncreatedChat.current = true;
             }
-            catch { }
+            catch (err) {
+                console.log(err)
+            }
             return;
         }
 

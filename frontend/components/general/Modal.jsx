@@ -11,7 +11,7 @@ export default (props) => {
     const formRef = useRef(null);
     const usersRef = useRef(null);
 
-    const {addModalSetter, setActiveModal} = useChat();
+    const { addModalSetter, setActiveModal } = useChat();
 
     useEffect(() => {
         const unsubscribe = addModalSetter(setActiveModal);
@@ -25,8 +25,25 @@ export default (props) => {
         const formData = new FormData(e.currentTarget);
 
         const data = Object.fromEntries(formData.entries());
-        
-        if(usersRef.current){
+
+        const processCheckboxes = (items) => {
+            items.forEach(item => {
+                console.log(item);
+                if (item.type === "checkbox") {
+                    const isChecked = formData.has(item.name);
+                    data[item.name] = isChecked;
+                    formData.set(item.name, isChecked);
+                } else if (item.inside) {
+                    processCheckboxes(item.inside);
+                }
+            });
+        };
+
+        if (info.content) {
+            processCheckboxes(info.content);
+        }
+
+        if (usersRef.current) {
             formData.append(info.nameUsers, JSON.stringify(usersRef.current));
             data[info.nameUsers] = usersRef.current;
         }
@@ -68,7 +85,13 @@ export default (props) => {
                     </select>
                 </div>
             );
-            case "finder-user": return (<UserSearch userRef={usersRef} key={index} exclude={info.excludeUser}/>);
+            case "checkbox": return (
+                <div key={index} className={styles.checkbox__container}>
+                    <input name={componentInfo.name} type="checkbox" defaultChecked={componentInfo.defaultChecked} />
+                    <p>{componentInfo.name}</p>
+                </div>
+            );
+            case "finder-user": return (<UserSearch userRef={usersRef} key={index} exclude={info.excludeUser} />);
         }
     }
 

@@ -134,8 +134,13 @@ router.put("/edit-rights/:id", CheckAuthorization,
     validator,
     catchAsync(async (req, res, next) => {
         const { memberId, role, rights } = req.body;
+        const chatId = req.params.id;
 
-        const member = await ChatService.editRights(req.user.id, req.params.id, memberId, role, rights);
+        const member = await ChatService.editRights(req.user.id, chatId, memberId, role, rights);
+
+        const io = req.app.get("io");
+
+        io.to(`chat_${chatId}`).emit("member_info_changed", {chatId, member});
 
         responseService.success(res, { member });
     })

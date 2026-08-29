@@ -19,7 +19,7 @@ export const titleValidator = (isOptional = false) => createValidator(
         .trim().isLength({ min: 1, max: 25 }).withMessage("INVALID_SIZE_OF_TITLE")
 );
 
-const rights = Object.values(MemberRights).flat();
+const rights = Object.values(MemberRights).flatMap(Object.values);
 
 export const membersValidator = (isOptional = false) => [
     createValidator(
@@ -50,12 +50,12 @@ export const memberRoleValidator = (isOptional = false) => createValidator(
     body("role"),
     isOptional,
     (chain) => chain
-        .isIn(Object.keys(MemberRoles.MEMBER)).withMessage("INVALID_TYPE")
+        .isIn(Object.keys(MemberRoles)).withMessage("INVALID_TYPE_ROLE")
 );
 
 export const memberRightsValidator = (isOptional = false) => createValidator(
     body("rights"),
     isOptional,
     (chain) => chain
-        .isIn(rights).withMessage("INVALID_TYPE")
+        .isIn(rights).withMessage("INVALID_TYPE_RIGHT")
 );

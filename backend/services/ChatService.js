@@ -73,11 +73,9 @@ class ChatService {
         return member !== undefined;
     }
 
-    changeMemberRight(member, right, active) {
-        if (active) {
-            if (!member.rights.includes(right)) {
-                member.rights.push(right);
-            }
+    changeMemberRight(member, right) {
+        if (!member.rights.includes(right)) {
+            member.rights.push(right);
         }
         else {
             member.rights = member.rights.filter(temp => temp !== right);
@@ -139,7 +137,7 @@ class ChatService {
                 title: {
                     $cond: {
                         if: { $eq: ["$type", ChatTypes.PRIVATE] },
-                        then: "$otherUser.username",
+                        then: "$otherUser.name",
                         else: "$title"
                     }
                 },
@@ -450,7 +448,7 @@ class ChatService {
     }
 
     async editRights(actorId, chatId, memberId, role, rights) {
-        const chat = getChat(chatId);
+        const chat = await this.getChat(chatId);
         if (!chat) {
             throw ApiError.badRequest("CHAT_NOT_EXISTS");
         }
@@ -486,12 +484,12 @@ class ChatService {
             member.rights = Object.keys(MemberRights[role]);
         }
         else {
-            for (const right in rights) {
+            for (const right of rights) {
                 if (!Object.keys(MemberRights[role]).includes(right)) {
                     throw ApiError.badRequest("RIGHT_NOT_EXISTS");
                 }
 
-                this.changeMemberRight(member, right, rights[right]);
+                this.changeMemberRight(member, right);
             }
         }
 
@@ -575,7 +573,8 @@ class ChatService {
                     name: "$user.name",
                     avatar: "$user.avatar",
                     username: "$user.username",
-                    role: "$members.role"
+                    role: "$members.role",
+                    rights: "$members.rights",
                 }
             }]);
 

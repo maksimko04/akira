@@ -8,11 +8,12 @@ import { useEffect, useRef, useState } from "react";
 import ChatApi from "../../api/ChatApi";
 import { useToast } from "@/providers/toastProvider"
 import typesToast from "@/constants/typesToast";
-import { strengthOfRole } from "../../shared/ChatRights";
+import { rights, strengthOfRole } from "../../shared/ChatRights";
 import UserApi from "../../api/UserApi";
 import { Xmark } from "@gravity-ui/icons";
 import { Icon } from "@gravity-ui/uikit";
 import typesChat from "../../constants/typesChat";
+import ContextMenu from "../general/ContextMenu";
 
 const createAddMembersModal = ({ setSelectedChat, selectedChat, setActiveModal, createToast }) => ({
     submitText: "Add",
@@ -91,6 +92,23 @@ const createEditChatModal = ({ setSelectedChat, selectedChat, setActiveModal, cr
     }
 });
 
+const createEditRightsModal = ({ selectedMember }) => ({
+    submitText: "Edit",
+
+    title: `Edit rights for ${selectedMember.name}`,
+    width: "600px",
+
+    content: Object.keys(rights[selectedMember.role]).map(right => ({
+        type: "checkbox",
+        name: right,
+        defaultChecked: selectedMember.rights.includes(right),
+    })),
+
+    callback: async (data, formData) => {
+        console.log(data);
+    }
+});
+
 const actions = [
     {
         title: "Change group info",
@@ -112,14 +130,71 @@ const actions = [
     }
 ];
 
+const contextMenuActions = [
+    {
+        text: "Remove from chat",
+        hideWhen: (user, { selectedChat, selectedMember }) => {
+            return strengthOfRole[selectedChat.myMember.role] <= strengthOfRole[selectedMember.role];
+        },
+
+        action: async ({ selectedChat, setSelectedChat, selectedMember, createToast }) => {
+            try {
+                await ChatApi.removeMember(selectedChat._id, selectedMember._id);
+
+                setSelectedChat(prev => (
+                    { ...prev, members: prev.members.filter(member => member.user !== selectedMember._id) }));
+            }
+            catch (err) {
+                console.log(err);
+                createToast();
+            }
+        }
+    },
+    {
+        text: "Edit rights",
+        hideWhen: (user, { selectedChat, selectedMember }) => {
+            return strengthOfRole[selectedChat.myMember.role] <= strengthOfRole[selectedMember.role];
+        },
+        action: ({ selectedMember, setActiveModal }) => {
+            setActiveModal(createEditRightsModal({ selectedMember }));
+        }
+    },
+    {
+        text: "Open private chat",
+        hideWhen: (user, { selectedChat, selectedMember }) => {
+            return selectedChat.myMember.user === selectedMember._id;
+        },
+        action: ({ selectedMember, openChat, chats }) => {
+            const chat = chats
+                .filter(chat => chat.type === typesChat.PRIVATE)
+                .find(chat => chat.members.some(member => member.user === selectedMember._id));
+
+            if (chat) {
+                openChat(chat);
+                return;
+            }
+
+            openChat({
+                uncreated: true,
+                name: selectedMember.name,
+                userId: selectedMember._id
+            });
+        }
+    },
+];
+
 export default (props) => {
     const { setIsControlPanelOpen } = props;
-    const { selectedChat, setSelectedChat, setActiveModal, setChats } = useChat();
+    const { selectedChat, setSelectedChat, setActiveModal, setChats, openChat, chats } = useChat();
     const [membersDetail, setMembersDetail] = useState([]);
     const createToast = useToast();
     const membersDetailsInitialized = useRef(false);
+    const [infoContextMenu, setInfoContextMenu] = useState(null);
 
     useEffect(() => {
+        if (!selectedChat || selectedChat.type === typesChat.PRIVATE) {
+            return;
+        }
         const getMembersDetail = async () => {
             try {
                 const response = await ChatApi.getMembersDetails(selectedChat._id);
@@ -134,32 +209,62 @@ export default (props) => {
         }
 
         getMembersDetail();
-    }, [selectedChat._id]);
+    }, [selectedChat?._id]);
 
     useEffect(() => {
+        if (!selectedChat?.members) return;
+
         let isMounted = true;
+
         const changeMembersDetail = async () => {
-            setMembersDetail(prev => prev.filter(member => selectedChat.members.some(m => m.user === member._id)));
+            const getUserId = (m) => (typeof m.user === "object" ? m.user._id : m.user);
 
-            const newMembers = await Promise.all(
-                selectedChat.members
-                    .filter(member => !membersDetail.some(memberDetail => memberDetail._id === member.user))
-                    .map(async member => {
-                        try {
-                            const response = await UserApi.getUser(member.user);
-
-                            return { ...response.data.user, role: member.role };
-                        }
-                        catch {
-                            return null;
-                        }
-                    })
+            // 1. Знаходимо тільки ТИХ користувачів, яких ще ВЗАГАЛІ немає в membersDetail
+            const membersToFetch = selectedChat.members.filter(
+                member => !membersDetail.some(detail => detail._id === getUserId(member))
             );
 
-            if (isMounted) {
-                setMembersDetail(prev => [...prev, ...(newMembers.filter(Boolean))]);
-            }
-        }
+            // 2. Завантажуємо з API тільки новачків
+            const fetchedNewMembers = await Promise.all(
+                membersToFetch.map(async (member) => {
+                    const userId = getUserId(member);
+                    try {
+                        const response = await UserApi.getUser(userId);
+                        return {
+                            ...response.data.user,
+                            ...member // Додаємо role, rights та інші поля з сокета/чату
+                        };
+                    } catch {
+                        return null;
+                    }
+                })
+            );
+
+            if (!isMounted) return;
+
+            const validNewMembers = fetchedNewMembers.filter(Boolean);
+
+            // 3. В один атомарний сеттер:
+            // - Видаляємо тих, хто вийшов
+            // - ОНОВЛЮЄМО роль/права у тих, хто залишився
+            // - Додаємо завантажених новачків
+            setMembersDetail(prev => {
+                const updatedExisting = prev
+                    .filter(detailItem => selectedChat.members.some(m => getUserId(m) === detailItem._id))
+                    .map(detailItem => {
+                        const freshMemberData = selectedChat.members.find(m => getUserId(m) === detailItem._id);
+                        if (!freshMemberData) return detailItem;
+
+                        // Мерджимо нові права, роль тощо поверх старих деталей профілю
+                        return {
+                            ...detailItem,
+                            ...freshMemberData
+                        };
+                    });
+
+                return [...updatedExisting, ...validNewMembers];
+            });
+        };
 
         if (membersDetailsInitialized.current) {
             changeMembersDetail();
@@ -167,8 +272,8 @@ export default (props) => {
 
         return () => {
             isMounted = false;
-        }
-    }, [selectedChat.members]);
+        };
+    }, [selectedChat?.members]);
 
     const removeUser = async (memberId) => {
         try {
@@ -189,8 +294,37 @@ export default (props) => {
         setActiveModal,
         createToast,
         setSelectedChat,
-        setChats
+        setChats,
     };
+
+    const dataForContextMemberActions = {
+        selectedChat,
+        setSelectedChat,
+        createToast,
+        openChat,
+        chats,
+        setActiveModal,
+    };
+
+    const openContextMenu = (event, selectedMember) => {
+        event.preventDefault();
+        event.stopPropagation();
+
+        setInfoContextMenu({
+            pos: {
+                x: event.clientX,
+                y: event.clientY
+            },
+            data: {
+                selectedMember,
+                ...dataForContextMemberActions
+            }
+        });
+    };
+
+    if (!selectedChat || selectedChat.uncreated) {
+        return null;
+    }
 
     return (createPortal(<div onMouseDown={(event) => { event.stopPropagation() }} className={styles.container}>
         <div className={styles.general__info}>
@@ -212,7 +346,7 @@ export default (props) => {
         </div>
         <ul className={styles.members__list}>
             {selectedChat.type !== typesChat.PRIVATE && membersDetail.map(member =>
-                <div key={member._id} className={styles.member}>
+                <div onContextMenu={(event) => openContextMenu(event, member)} key={member._id} className={styles.member}>
                     <Avatar onlyView={true} defaultImage={member.avatar && avatarsStorage + member.avatar}
                         additionalInfo={member.name} fontSize="14px" height="90%" />
                     <div className={styles.text__info__member}>
@@ -235,5 +369,7 @@ export default (props) => {
 
             <i>Ваш улюблений @maksimko04</i>
         </p>}
+        {infoContextMenu &&
+            <ContextMenu info={infoContextMenu} close={() => setInfoContextMenu(null)} actions={contextMenuActions} ></ContextMenu>}
     </div>, document.body));
 }

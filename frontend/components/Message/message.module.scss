@@ -78,6 +78,12 @@
   }
 }
 
+.message:not(:has(.content__message)) {
+  .attachments__container {
+    border-radius: var(--border-radius);
+  }
+}
+
 .attachments__container {
   display: grid;
   gap: 4px;

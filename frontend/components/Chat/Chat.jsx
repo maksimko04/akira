@@ -16,17 +16,6 @@ export default (props) => {
     const [user, isLoading] = useMe();
     const { selectedChat, sendMessage, textMessageRef } = useChat();
     const [isControlPanelOpen, setIsControlPanelOpen] = useState(false);
-    const messageToUncreatedChat = useRef(false);
-
-    useEffect(() => {
-        if (messageToUncreatedChat.current) {
-            sendMessage(textMessageRef.current.value);
-            textMessageRef.current.value = "";
-            messageToUncreatedChat.current = false;
-        }
-
-        setIsControlPanelOpen(false)
-    }, [selectedChat?._id]);
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -51,7 +40,7 @@ export default (props) => {
                     <ChatHeader setIsControlPanelOpen={setIsControlPanelOpen} />
                     <MessagesBlock />
                     {(selectedChat.uncreated || checkRight(selectedChat.myMember, rights.MEMBER.SEND_MESSAGES)) &&
-                        <SendAreaMessage />
+                        <SendAreaMessage setIsControlPanelOpen={setIsControlPanelOpen} />
                     }
                 </>
                 :

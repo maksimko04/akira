@@ -83,6 +83,7 @@ export default () => {
     } = useChat();
 
     const [infoContextMenu, setInfoContextMenu] = useState(null);
+    const contextMenuRef = useRef(null);
 
     const [imageViewer, setImageViewer] = useState(null);
 
@@ -200,10 +201,10 @@ export default () => {
         let imagesFound = false;
         for (let i = start; i !== end; i += step) {
             const msg = messages[i];
-            if(msg._id === imageViewer.id){
+            if (msg._id === imageViewer.id) {
                 return imagesFound;
             }
-            if(messageFeaturesRef.current.get(msg._id)?.hasImages()){
+            if (messageFeaturesRef.current.get(msg._id)?.hasImages()) {
                 imagesFound = true;
             }
         }
@@ -219,15 +220,42 @@ export default () => {
         let necessaryMessage = null;
         for (let i = start; i !== end; i += step) {
             const msg = messages[i];
-            if(msg._id === imageViewer.id){
+            if (msg._id === imageViewer.id) {
                 messageFeaturesRef.current.get(necessaryMessage).openImageViewer();
                 return;
             }
-            if(messageFeaturesRef.current.get(msg._id)?.hasImages()){
+            if (messageFeaturesRef.current.get(msg._id)?.hasImages()) {
                 necessaryMessage = msg._id;
             }
         }
     }
+
+    useLayoutEffect(() => {
+        if (!infoContextMenu || !contextMenuRef.current) {
+            return;
+        }
+
+        const { offsetWidth, offsetHeight } = contextMenuRef.current;
+        const { innerWidth, innerHeight } = window;
+
+        contextMenuRef.current.classList.remove(
+            styles.offset__both__sides__context,
+            styles.offset__vertical__context,
+            styles.offset__horizontal__context
+        );
+        if (offsetHeight + infoContextMenu.pos.y > innerHeight) {
+            if (offsetWidth + infoContextMenu.pos.x > innerWidth) {
+                contextMenuRef.current.classList.add(styles.offset__both__sides__context);
+            }
+            else {
+                contextMenuRef.current.classList.add(styles.offset__vertical__context);
+            }
+        }
+        else if (offsetWidth + infoContextMenu.pos.x > innerWidth) {
+            contextMenuRef.current.classList.add(styles.offset__horizontal__context);
+        }
+
+    }, [infoContextMenu, contextMenuRef]);
 
     return (<> <div ref={messageBlockRef} className={styles.container}>
         <div ref={bottomSentielRef} style={{ height: '1px' }}></div>
@@ -254,7 +282,7 @@ export default () => {
     </div>
         {
             infoContextMenu &&
-            <ContextMenu actions={contextMenuActions} info={infoContextMenu} close={() => setInfoContextMenu(null)} />
+            <ContextMenu ref={contextMenuRef} actions={contextMenuActions} info={infoContextMenu} close={() => setInfoContextMenu(null)} />
         }
         {imageViewer && <ImageViewer portalNodeRef={portalNodeRef} switchImages={switchImages}
             info={imageViewer} setImageViewer={setImageViewer} hasImages={hasImages} />}

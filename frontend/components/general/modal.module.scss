@@ -34,11 +34,11 @@
     gap: 10px;
 }
 
-.container input {
+.container input:not([type="checkbox"]) {
     width: 100%;
 }
 
-.container button {
+.container > button {
     width: 150px;
     height: 30px;
     align-self: center;
@@ -65,4 +65,11 @@
     background-color: var(--vidget-color3);
     padding: 5px;
     padding-left: 10px;
+}
+
+.checkbox__container {
+    display: flex;
+    height: 40px;
+    align-items: center;
+    gap: 5px;
 }

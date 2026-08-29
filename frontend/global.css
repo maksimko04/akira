@@ -202,11 +202,11 @@ input[type="checkbox"] {
       top: 50%;
       left: 50%;
       translate: -50% -50%;
-      width: 16px;
-      height: 16px;
+      width: 90%;
+      height: 90%;
       background-color: var(--background-color);
-      -webkit-mask: url("/src/assets/icons/icon-check_white.svg") center/contain no-repeat;
-      mask: url("/src/assets/icons/icon-check_white.svg") center/contain no-repeat;
+      -webkit-mask: url("/icon-check_white.svg") center/contain no-repeat;
+      mask: url("/icon-check_white.svg") center/contain no-repeat;
     }
   }
 }
