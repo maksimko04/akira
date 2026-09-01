@@ -28,7 +28,6 @@ export default (props) => {
 
         const processCheckboxes = (items) => {
             items.forEach(item => {
-                console.log(item);
                 if (item.type === "checkbox") {
                     const isChecked = formData.has(item.name);
                     data[item.name] = isChecked;

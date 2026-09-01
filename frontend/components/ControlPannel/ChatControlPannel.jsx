@@ -14,6 +14,7 @@ import { Xmark } from "@gravity-ui/icons";
 import { Icon } from "@gravity-ui/uikit";
 import typesChat from "../../constants/typesChat";
 import ContextMenu from "../general/ContextMenu";
+import { convertServerPatchToFullTree } from "next/dist/client/components/segment-cache/navigation";
 
 const createAddMembersModal = ({ setSelectedChat, selectedChat, setActiveModal, createToast }) => ({
     submitText: "Add",
@@ -92,7 +93,7 @@ const createEditChatModal = ({ setSelectedChat, selectedChat, setActiveModal, cr
     }
 });
 
-const createEditRightsModal = ({ selectedMember }) => ({
+const createEditRightsModal = ({ selectedMember, selectedChat, setActiveModal }) => ({
     submitText: "Edit",
 
     title: `Edit rights for ${selectedMember.name}`,
@@ -105,7 +106,22 @@ const createEditRightsModal = ({ selectedMember }) => ({
     })),
 
     callback: async (data, formData) => {
-        console.log(data);
+        try {
+            const body = {
+                memberId: selectedMember._id,
+                role: "MEMBER",
+                rights: Object.entries(data)
+                    .filter(([right, isActive]) => isActive !== selectedMember.rights.includes(right))
+                    .map(([right, isActive]) => right)
+
+            };
+            await ChatApi.editRights(selectedChat._id, body);
+
+            setActiveModal(null);
+        }
+        catch (err) {
+            console.log(err);
+        }
     }
 });
 
@@ -155,8 +171,8 @@ const contextMenuActions = [
         hideWhen: (user, { selectedChat, selectedMember }) => {
             return strengthOfRole[selectedChat.myMember.role] <= strengthOfRole[selectedMember.role];
         },
-        action: ({ selectedMember, setActiveModal }) => {
-            setActiveModal(createEditRightsModal({ selectedMember }));
+        action: ({ selectedMember, setActiveModal, selectedChat }) => {
+            setActiveModal(createEditRightsModal({ selectedMember, selectedChat, setActiveModal }));
         }
     },
     {
@@ -219,12 +235,10 @@ export default (props) => {
         const changeMembersDetail = async () => {
             const getUserId = (m) => (typeof m.user === "object" ? m.user._id : m.user);
 
-            // 1. Знаходимо тільки ТИХ користувачів, яких ще ВЗАГАЛІ немає в membersDetail
             const membersToFetch = selectedChat.members.filter(
                 member => !membersDetail.some(detail => detail._id === getUserId(member))
             );
 
-            // 2. Завантажуємо з API тільки новачків
             const fetchedNewMembers = await Promise.all(
                 membersToFetch.map(async (member) => {
                     const userId = getUserId(member);
@@ -232,7 +246,7 @@ export default (props) => {
                         const response = await UserApi.getUser(userId);
                         return {
                             ...response.data.user,
-                            ...member // Додаємо role, rights та інші поля з сокета/чату
+                            ...member
                         };
                     } catch {
                         return null;
@@ -244,10 +258,6 @@ export default (props) => {
 
             const validNewMembers = fetchedNewMembers.filter(Boolean);
 
-            // 3. В один атомарний сеттер:
-            // - Видаляємо тих, хто вийшов
-            // - ОНОВЛЮЄМО роль/права у тих, хто залишився
-            // - Додаємо завантажених новачків
             setMembersDetail(prev => {
                 const updatedExisting = prev
                     .filter(detailItem => selectedChat.members.some(m => getUserId(m) === detailItem._id))
@@ -255,7 +265,6 @@ export default (props) => {
                         const freshMemberData = selectedChat.members.find(m => getUserId(m) === detailItem._id);
                         if (!freshMemberData) return detailItem;
 
-                        // Мерджимо нові права, роль тощо поверх старих деталей профілю
                         return {
                             ...detailItem,
                             ...freshMemberData

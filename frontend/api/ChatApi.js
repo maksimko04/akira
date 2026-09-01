@@ -37,6 +37,10 @@ class ChatApi {
     async editChat(chatId, body){
         return await api.put(`/chat/edit/${chatId}`, body);
     }
+
+    async editRights(chatId, body){
+        return await api.put(`/chat/edit-rights/${chatId}`, body);
+    }
 }
 
 export default new ChatApi();
